@@ -97,7 +97,8 @@ int main(){
     // Player properties
     float playerPosX = 7.5;
     float playerPosY = 7.5;
-    float playerRot = 90 * PI / 180; // Rotation
+    float playerRot = 45 * PI / 180; // Rotation
+    float playerFov = PI / 3; // Field of view
 
     // Set background color
     for (size_t row = 0; row < winW; row++){
@@ -134,22 +135,27 @@ int main(){
     // Draw player on the map
     drawRectangle(img, winW, winH, playerPosX * rectW, playerPosY * rectH, 5, 5, packColor(0, 0, 255));
 
-    // Cast ray that represents player's view direction
-    for (float dist = 0; dist < 23; dist += 0.05){
-        float targetX = playerPosX + dist * cos(playerRot);
-        float targetY = playerPosY + dist * sin(playerRot);
-        if (map[(int) targetY * mapW + (int) targetX] != ' '){
-            // Ray hits a block
-            break;
+    // Cast field of view on the map
+    for(size_t i = 0; i < winW; i++){
+        float rotation = playerRot - playerFov / 2 + playerFov * (i/(float)winW);
+        uint32_t color = packColor(255, 0, 0);
+        
+        // Cast single ray in certain direction
+        for (float dist = 0; dist < 23; dist += 0.05){
+            float targetX = playerPosX + dist * cos(rotation);
+            float targetY = playerPosY + dist * sin(rotation);
+            if (map[(int) targetY * mapW + (int) targetX] != ' '){
+                // Ray hits a block
+                break;
+            }
+            size_t x = targetX * rectW;
+            size_t y = targetY * rectH;
+            img[y * winW + x] = color;
         }
-
-        size_t x = targetX * rectW;
-        size_t y = targetY * rectH;
-        img[y * winW + x] = packColor(255, 0, 0);
     }
 
     // Generate 24-bit color image (.ppm)
-    generateImage("./img/output_2_deg_90.ppm", img, winW, winH);
+    generateImage("./img/output_3.ppm", img, winW, winH);
 
     return 0;
 }
