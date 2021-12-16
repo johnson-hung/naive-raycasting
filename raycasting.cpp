@@ -61,16 +61,18 @@ void drawRectangle(std::vector<uint32_t>& img,
         for (size_t offsetCol = 0; offsetCol < rectW; offsetCol++){
             size_t r = row + offsetRow;
             size_t c = col + offsetCol;
-            assert(r < winH && c < winW);
+            if (r >= winH || c >= winW){ // No need to draw when it's out-of-bound
+                continue;
+            }
             img[r * winW + c] = color;
         }
-    }    
+    }   
 }
 
 int main(){
-    const size_t winW = 512; // Window width
+    const size_t winW = 1024; // Window width (top-down map and 3D view)
     const size_t winH = 512; // Window height
-    std::vector<uint32_t> img(winW * winH, 255); // Initialize the image to red
+    std::vector<uint32_t> img(winW * winH, packColor(255, 255, 255)); // Initialize the image
 
     // Map properties
     const size_t mapW = 16;
@@ -119,8 +121,8 @@ int main(){
         }
     }
 
-    // Scale the map to window size and display it
-    const size_t rectW = winW / mapW;
+    // Scale the top-down map to window size and display it
+    const size_t rectW = (winW/2) / mapW;
     const size_t rectH = winH / mapH;
     for (size_t row = 0; row < mapH; row++){
         for (size_t col = 0; col < mapW; col++){
@@ -132,12 +134,12 @@ int main(){
         }
     }
 
-    // Draw player on the map
+    // Draw player on the top-down map
     drawRectangle(img, winW, winH, playerPosX * rectW, playerPosY * rectH, 5, 5, packColor(0, 0, 255));
 
-    // Cast field of view on the map
-    for(size_t i = 0; i < winW; i++){
-        float rotation = playerRot - playerFov / 2 + playerFov * (i/(float)winW);
+    // Cast field of view on the top-down map and 3D view
+    for(size_t i = 0; i < winW/2; i++){
+        float rotation = playerRot - playerFov / 2 + playerFov * (i/(float)(winW/2));
         uint32_t color = packColor(255, 0, 0);
         
         // Cast single ray in certain direction
@@ -145,9 +147,14 @@ int main(){
             float targetX = playerPosX + dist * cos(rotation);
             float targetY = playerPosY + dist * sin(rotation);
             if (map[(int) targetY * mapW + (int) targetX] != ' '){
-                // Ray hits a block
+                // Ray hits a block, render vertical column for 3D view
+                size_t h = winH / dist;
+                uint32_t wallColor = packColor(255 * h / winH, 0, 0);
+
+                drawRectangle(img, winW, winH, winH/2 - h/2, winW/2 + i, 1, h, wallColor);
                 break;
             }
+
             size_t x = targetX * rectW;
             size_t y = targetY * rectH;
             img[y * winW + x] = color;
@@ -155,7 +162,7 @@ int main(){
     }
 
     // Generate 24-bit color image (.ppm)
-    generateImage("./img/output_3.ppm", img, winW, winH);
+    generateImage("./img/output_4.ppm", img, winW, winH);
 
     return 0;
 }
