@@ -50,21 +50,21 @@ void generateImage(const std::string filename,
 void drawRectangle(std::vector<uint32_t>& img,
                    const size_t winW,
                    const size_t winH, 
-                   const size_t row, // Start from this row
-                   const size_t col, // Start from this col
+                   const size_t x, // Start from this x
+                   const size_t y, // Start from this y
                    const size_t rectW,
                    const size_t rectH,
                    const uint32_t color){
     assert(img.size() == winW * winH);
 
-    for (size_t offsetRow = 0; offsetRow < rectH; offsetRow++){
-        for (size_t offsetCol = 0; offsetCol < rectW; offsetCol++){
-            size_t r = row + offsetRow;
-            size_t c = col + offsetCol;
-            if (r >= winH || c >= winW){ // No need to draw when it's out-of-bound
+    for (size_t offsetX = 0; offsetX < rectW; offsetX++){
+        for (size_t offsetY = 0; offsetY < rectH; offsetY++){
+            size_t curX = x + offsetX;
+            size_t curY = y + offsetY;
+            if (curX >= winW || curY >= winH){ // No need to draw when it's out-of-bound
                 continue;
             }
-            img[r * winW + c] = color;
+            img[curY * winW + curX] = color;
         }
     }   
 }
@@ -103,8 +103,8 @@ int main(){
     float playerFov = PI / 3; // Field of view
 
     // Set background color
-    for (size_t row = 0; row < winW; row++){
-        for (size_t col = 0; col < winW; col++){
+    for (size_t x = 0; x < winW; x++){
+        for (size_t y = 0; y < winH; y++){
             #ifdef _BG_GRADIENT_
             // Gradient color
             uint8_t r = 255 * (row / (float) winW);
@@ -117,20 +117,20 @@ int main(){
             uint8_t b = 255;
             #endif
 
-            img[row * winW + col] = packColor(r, g, b);
+            img[y * winW + x] = packColor(r, g, b);
         }
     }
 
     // Scale the top-down map to window size and display it
     const size_t rectW = (winW/2) / mapW;
     const size_t rectH = winH / mapH;
-    for (size_t row = 0; row < mapH; row++){
-        for (size_t col = 0; col < mapW; col++){
-            if (map[row * mapW + col] == ' ') continue;
-            size_t r = row * rectH;
-            size_t c = col * rectW;
+    for (size_t x = 0; x < mapW; x++){
+        for (size_t y = 0; y < mapH; y++){
+            if (map[y * mapW + x] == ' ') continue;
+            size_t imgX = x * rectW;
+            size_t imgY = y * rectH;
             uint32_t color = packColor(0, 0, 0);
-            drawRectangle(img, winW, winH, r, c, rectW, rectH, color);
+            drawRectangle(img, winW, winH, imgX, imgY, rectW, rectH, color);
         }
     }
 
@@ -149,12 +149,10 @@ int main(){
             if (map[(int) targetY * mapW + (int) targetX] != ' '){
                 // Ray hits a block, render vertical column for 3D view
                 size_t h = winH / dist;
-                uint32_t wallColor = packColor(255 * h / winH, 0, 0);
-
-                drawRectangle(img, winW, winH, winH/2 - h/2, winW/2 + i, 1, h, wallColor);
+                uint32_t wallColor = packColor(255 * h / winH, 0, 0); // Some color variation
+                drawRectangle(img, winW, winH, winW/2 + i, winH/2 - h/2, 1, h, wallColor);
                 break;
             }
-
             size_t x = targetX * rectW;
             size_t y = targetY * rectH;
             img[y * winW + x] = color;
