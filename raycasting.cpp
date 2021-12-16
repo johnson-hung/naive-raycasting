@@ -3,7 +3,9 @@
 #include <vector>
 #include <cstdint> // Fixed width integer types 
 #include <cassert> // Error handling
+#include <cmath>
 
+#define PI 3.14159265
 // #define _BG_GRADIENT_
 
 // Turn (r, g, b, a) to 32-bit integer
@@ -62,8 +64,7 @@ void drawRectangle(std::vector<uint32_t>& img,
             assert(r < winH && c < winW);
             img[r * winW + c] = color;
         }
-    }
-    
+    }    
 }
 
 int main(){
@@ -96,6 +97,7 @@ int main(){
     // Player properties
     float playerPosX = 7.5;
     float playerPosY = 7.5;
+    float playerRot = 90 * PI / 180; // Rotation
 
     // Set background color
     for (size_t row = 0; row < winW; row++){
@@ -132,8 +134,22 @@ int main(){
     // Draw player on the map
     drawRectangle(img, winW, winH, playerPosX * rectW, playerPosY * rectH, 5, 5, packColor(0, 0, 255));
 
+    // Cast ray that represents player's view direction
+    for (float dist = 0; dist < 23; dist += 0.05){
+        float targetX = playerPosX + dist * cos(playerRot);
+        float targetY = playerPosY + dist * sin(playerRot);
+        if (map[(int) targetY * mapW + (int) targetX] != ' '){
+            // Ray hits a block
+            break;
+        }
+
+        size_t x = targetX * rectW;
+        size_t y = targetY * rectH;
+        img[y * winW + x] = packColor(255, 0, 0);
+    }
+
     // Generate 24-bit color image (.ppm)
-    generateImage("./output_2.ppm", img, winW, winH);
+    generateImage("./img/output_2_deg_90.ppm", img, winW, winH);
 
     return 0;
 }
