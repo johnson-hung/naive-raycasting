@@ -4,6 +4,8 @@
 #include <cstdint> // Fixed width integer types 
 #include <cassert> // Error handling
 #include <cmath>
+#include <sstream> // String stream classes
+#include <iomanip> // Parametric manipulators
 
 #define PI 3.14159265
 // #define _BG_GRADIENT_
@@ -79,18 +81,18 @@ int main(){
     const size_t mapH = 16;
     const char map[] = "0000000000000000"\
                        "0              0"\
-                       "0              0"\
-                       "0              0"\
-                       "0    000000    0"\
+                       "6              0"\
+                       "6              0"\
+                       "6     22200    0"\
+                       "0  0      0    0"\
                        "0         0    0"\
-                       "0         0    0"\
-                       "0    0    0    0"\
-                       "0    0    0    0"\
+                       "0    0    1    0"\
+                       "0    3    1    0"\
                        "0    0         0"\
-                       "0    0         0"\
-                       "0    000000    0"\
-                       "0              0"\
-                       "0              0"\
+                       "0    0         5"\
+                       "0    00440     5"\
+                       "0              5"\
+                       "0            000"\
                        "0              0"\
                        "0000000000000000";
 
@@ -101,6 +103,13 @@ int main(){
     float playerPosY = 7.5;
     float playerRot = 45 * PI / 180; // Rotation
     float playerFov = PI / 3; // Field of view
+
+
+    const size_t numColors = 10;
+    std::vector<uint32_t> colors(numColors);
+    for (size_t i = 0; i < numColors; i++){
+        colors[i] = packColor(rand() % 255, rand() % 255, rand() % 255);
+    }
 
     // Set background color
     for (size_t x = 0; x < winW; x++){
@@ -124,43 +133,55 @@ int main(){
     // Scale the top-down map to window size and display it
     const size_t rectW = (winW/2) / mapW;
     const size_t rectH = winH / mapH;
-    for (size_t x = 0; x < mapW; x++){
-        for (size_t y = 0; y < mapH; y++){
-            if (map[y * mapW + x] == ' ') continue;
-            size_t imgX = x * rectW;
-            size_t imgY = y * rectH;
-            uint32_t color = packColor(0, 0, 0);
-            drawRectangle(img, winW, winH, imgX, imgY, rectW, rectH, color);
-        }
-    }
 
-    // Draw player on the top-down map
-    drawRectangle(img, winW, winH, playerPosX * rectW, playerPosY * rectH, 5, 5, packColor(0, 0, 255));
+    for (size_t frame = 0; frame < 360; frame++){
+        std::stringstream ss;
+        ss << "./img/" << std::setfill('0') << std::setw(5) << frame << ".ppm";
+        playerRot += 2 * PI / 360;
 
-    // Cast field of view on the top-down map and 3D view
-    for(size_t i = 0; i < winW/2; i++){
-        float rotation = playerRot - playerFov / 2 + playerFov * (i/(float)(winW/2));
-        uint32_t color = packColor(255, 0, 0);
-        
-        // Cast single ray in certain direction
-        for (float dist = 0; dist < 23; dist += 0.05){
-            float targetX = playerPosX + dist * cos(rotation);
-            float targetY = playerPosY + dist * sin(rotation);
-            if (map[(int) targetY * mapW + (int) targetX] != ' '){
-                // Ray hits a block, render vertical column for 3D view
-                size_t h = winH / dist;
-                uint32_t wallColor = packColor(255 * h / winH, 0, 0); // Some color variation
-                drawRectangle(img, winW, winH, winW/2 + i, winH/2 - h/2, 1, h, wallColor);
-                break;
+        // Clear the screen for this new frame
+        img = std::vector<uint32_t>(winW * winH, packColor(255, 255, 255));
+
+        for (size_t x = 0; x < mapW; x++){
+            for (size_t y = 0; y < mapH; y++){
+                if (map[y * mapW + x] == ' ') continue;
+                size_t imgX = x * rectW;
+                size_t imgY = y * rectH;
+                size_t colorIdx = map[y * mapW + x] - '0';
+                assert(colorIdx < numColors);
+                drawRectangle(img, winW, winH, imgX, imgY, rectW, rectH, colors[colorIdx]);
             }
-            size_t x = targetX * rectW;
-            size_t y = targetY * rectH;
-            img[y * winW + x] = color;
         }
+
+        // Draw player on the top-down map
+        drawRectangle(img, winW, winH, playerPosX * rectW, playerPosY * rectH, 5, 5, packColor(0, 0, 255));
+    
+        // Cast field of view on the top-down map and 3D view
+        for(size_t i = 0; i < winW/2; i++){
+            float rotation = playerRot - playerFov / 2 + playerFov * (i/(float)(winW/2));
+            uint32_t color = packColor(255, 0, 0);
+            
+            // Cast single ray in certain direction
+            for (float dist = 0; dist < 23; dist += 0.05){
+                float targetX = playerPosX + dist * cos(rotation);
+                float targetY = playerPosY + dist * sin(rotation);
+                if (map[(int) targetY * mapW + (int) targetX] != ' '){
+                    // Ray hits a block, render vertical column for 3D view
+                    size_t h = winH / dist;
+                    size_t colorIdx = map[(int)targetY * mapW + (int)targetX] - '0';
+                    assert(colorIdx < numColors);
+                    drawRectangle(img, winW, winH, winW/2 + i, winH/2 - h/2, 1, h, colors[colorIdx]);
+                    break;
+                }
+                size_t x = targetX * rectW;
+                size_t y = targetY * rectH;
+                img[y * winW + x] = color;
+            }
+        }
+        // Generate 24-bit color image (.ppm)
+        generateImage(ss.str(), img, winW, winH);
     }
 
-    // Generate 24-bit color image (.ppm)
-    generateImage("./img/output_4.ppm", img, winW, winH);
 
     return 0;
 }
