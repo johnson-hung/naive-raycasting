@@ -162,12 +162,12 @@ int main(){
             uint32_t color = packColor(255, 0, 0);
             
             // Cast single ray in certain direction
-            for (float dist = 0; dist < 23; dist += 0.05){
+            for (float dist = 0; dist < 23; dist += 0.01){
                 float targetX = playerPosX + dist * cos(rotation);
                 float targetY = playerPosY + dist * sin(rotation);
                 if (map[(int) targetY * mapW + (int) targetX] != ' '){
                     // Ray hits a block, render vertical column for 3D view
-                    size_t h = winH / dist;
+                    size_t h = winH / (dist * cos(rotation - playerRot)); // Fix fisheye distortion
                     size_t colorIdx = map[(int)targetY * mapW + (int)targetX] - '0';
                     assert(colorIdx < numColors);
                     drawRectangle(img, winW, winH, winW/2 + i, winH/2 - h/2, 1, h, colors[colorIdx]);
