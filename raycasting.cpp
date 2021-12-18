@@ -4,8 +4,9 @@
 #include <cstdint> // Fixed width integer types 
 #include <cassert> // Error handling
 #include <cmath>
-#include <sstream> // String stream classes
-#include <iomanip> // Parametric manipulators
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 #define PI 3.14159265
 // #define _BG_GRADIENT_
@@ -71,6 +72,46 @@ void drawRectangle(std::vector<uint32_t>& img,
     }   
 }
 
+bool loadTexture(const std::string filename,
+                 std::vector<uint32_t>& texture,
+                 size_t& size,
+                 size_t& count){
+    int numChannels = -1;
+    int w;
+    int h;
+    unsigned char* img = stbi_load(filename.c_str(), &w, &h, &numChannels, 0);
+    if (!img){
+        std::cerr << "Error: Cannot load textures" << std::endl;
+        return false;
+    }
+    if (numChannels != 4){
+        std::cerr << "Error: Texture is not 32-bit image" << std::endl;
+        stbi_image_free(img);
+        return false;
+    }
+
+    count = w / h;
+    size = w / count;
+    if (w != h * int(count)){
+        std::cerr << "Error: Textures are not packed horizontally" << std::endl;
+        stbi_image_free(img);
+        return false;
+    }
+
+    texture = std::vector<uint32_t>(w * h);
+    for (int x = 0; x < w; x++){
+        for (int y = 0; y < h; y++){
+            uint8_t r = img[(y*w + x)*4];
+            uint8_t g = img[(y*w + x)*4 + 1];
+            uint8_t b = img[(y*w + x)*4 + 2];
+            uint8_t a = img[(y*w + x)*4 + 3];
+            texture[y*w + x] = packColor(r, g, b, a);
+        }
+    }
+    stbi_image_free(img);
+    return true;
+}
+
 int main(){
     const size_t winW = 1024; // Window width (top-down map and 3D view)
     const size_t winH = 512; // Window height
@@ -111,6 +152,14 @@ int main(){
         colors[i] = packColor(rand() % 255, rand() % 255, rand() % 255);
     }
 
+    std::vector<uint32_t> texture;
+    size_t textureSize;
+    size_t textureCount;
+    if (!loadTexture("./textures/wallTextures.png", texture, textureSize, textureCount)){
+        std::cerr << "Failed to load wall textures" << std::endl;
+        return -1;
+    }
+
     // Set background color
     for (size_t x = 0; x < winW; x++){
         for (size_t y = 0; y < winH; y++){
@@ -134,54 +183,54 @@ int main(){
     const size_t rectW = (winW/2) / mapW;
     const size_t rectH = winH / mapH;
 
-    for (size_t frame = 0; frame < 360; frame++){
-        std::stringstream ss;
-        ss << "./img/" << std::setfill('0') << std::setw(5) << frame << ".ppm";
-        playerRot += 2 * PI / 360;
-
-        // Clear the screen for this new frame
-        img = std::vector<uint32_t>(winW * winH, packColor(255, 255, 255));
-
-        for (size_t x = 0; x < mapW; x++){
-            for (size_t y = 0; y < mapH; y++){
-                if (map[y * mapW + x] == ' ') continue;
-                size_t imgX = x * rectW;
-                size_t imgY = y * rectH;
-                size_t colorIdx = map[y * mapW + x] - '0';
-                assert(colorIdx < numColors);
-                drawRectangle(img, winW, winH, imgX, imgY, rectW, rectH, colors[colorIdx]);
-            }
+    // Draw the top-down map
+    for (size_t x = 0; x < mapW; x++){
+        for (size_t y = 0; y < mapH; y++){
+            if (map[y * mapW + x] == ' ') continue;
+            size_t imgX = x * rectW;
+            size_t imgY = y * rectH;
+            size_t colorIdx = map[y * mapW + x] - '0';
+            assert(colorIdx < numColors);
+            drawRectangle(img, winW, winH, imgX, imgY, rectW, rectH, colors[colorIdx]);
         }
-
-        // Draw player on the top-down map
-        drawRectangle(img, winW, winH, playerPosX * rectW, playerPosY * rectH, 5, 5, packColor(0, 0, 255));
-    
-        // Cast field of view on the top-down map and 3D view
-        for(size_t i = 0; i < winW/2; i++){
-            float rotation = playerRot - playerFov / 2 + playerFov * (i/(float)(winW/2));
-            uint32_t color = packColor(255, 0, 0);
-            
-            // Cast single ray in certain direction
-            for (float dist = 0; dist < 23; dist += 0.01){
-                float targetX = playerPosX + dist * cos(rotation);
-                float targetY = playerPosY + dist * sin(rotation);
-                if (map[(int) targetY * mapW + (int) targetX] != ' '){
-                    // Ray hits a block, render vertical column for 3D view
-                    size_t h = winH / (dist * cos(rotation - playerRot)); // Fix fisheye distortion
-                    size_t colorIdx = map[(int)targetY * mapW + (int)targetX] - '0';
-                    assert(colorIdx < numColors);
-                    drawRectangle(img, winW, winH, winW/2 + i, winH/2 - h/2, 1, h, colors[colorIdx]);
-                    break;
-                }
-                size_t x = targetX * rectW;
-                size_t y = targetY * rectH;
-                img[y * winW + x] = color;
-            }
-        }
-        // Generate 24-bit color image (.ppm)
-        generateImage(ss.str(), img, winW, winH);
     }
 
+    // Draw player on the top-down map
+    drawRectangle(img, winW, winH, playerPosX * rectW, playerPosY * rectH, 5, 5, packColor(0, 0, 255));
+    
+    // Cast field of view on the top-down map and 3D view
+    for(size_t i = 0; i < winW/2; i++){
+        float rotation = playerRot - playerFov / 2 + playerFov * (i/(float)(winW/2));
+        uint32_t color = packColor(255, 0, 0);
+        
+        // Cast single ray in certain direction
+        for (float dist = 0; dist < 23; dist += 0.01){
+            float targetX = playerPosX + dist * cos(rotation);
+            float targetY = playerPosY + dist * sin(rotation);
 
+            size_t x = targetX * rectW;
+            size_t y = targetY * rectH;
+            img[y*winW + x] = color;
+
+            if (map[(int) targetY * mapW + (int) targetX] != ' '){
+                // Ray hits a block, render vertical column for 3D view
+                size_t h = winH / (dist * cos(rotation - playerRot)); // Fix fisheye distortion
+                size_t colorIdx = map[(int)targetY * mapW + (int)targetX] - '0';
+                assert(colorIdx < numColors);
+                drawRectangle(img, winW, winH, winW/2 + i, winH/2 - h/2, 1, h, colors[colorIdx]);
+                break;
+            }
+        }
+    }
+    
+    const size_t tId = 3;
+    for (size_t x = 0; x < textureSize; x++){
+        for (size_t y = 0; y < textureSize; y++){
+            img[y*winW + x] = texture[y*textureCount*textureSize + tId*textureSize + x];
+        }
+    }
+
+    // Generate 24-bit color image (.ppm)
+    generateImage("./img/output_6.ppm", img, winW, winH);
     return 0;
 }
