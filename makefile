@@ -10,8 +10,11 @@ run:
 
 #================
 
-raycasting: raycasting.o
-	g++ -o raycasting raycasting.o
+raycasting: raycasting.o utils.o
+	g++ -o raycasting raycasting.o utils.o
 
-raycasting.o: raycasting.cpp stb_image.h
+raycasting.o: raycasting.cpp utils.h stb_image.h
 	g++ -c raycasting.cpp
+
+utils.o: utils.cpp utils.h
+	g++ -c utils.cpp
