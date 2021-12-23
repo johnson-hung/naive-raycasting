@@ -6,6 +6,7 @@
 #include <cmath>
 #include "utils.h"
 #include "canvas.h"
+#include "map.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -76,31 +77,15 @@ std::vector<uint32_t> getTextureColumn(const std::vector<uint32_t>& texture,
 }
 
 int main(){
+    // Window (canvas) properties
     const size_t winW = 1024; // Window width (top-down map and 3D view)
     const size_t winH = 512; // Window height
     Canvas canvas(winW, winH, packColor(255, 255, 255)); // Initialize the canvas
 
-    // Map properties
-    const size_t mapW = 16;
-    const size_t mapH = 16;
-    const char map[] = "0111111111111111"\
-                       "0              1"\
-                       "4              1"\
-                       "4              1"\
-                       "4     22211    1"\
-                       "1  0      1    1"\
-                       "1         1    0"\
-                       "0    1    1    0"\
-                       "0    3    1    1"\
-                       "1    1         1"\
-                       "1    1         5"\
-                       "1    11441     5"\
-                       "1              5"\
-                       "1            333"\
-                       "1              1"\
-                       "1111111111111111";
-
-    assert(sizeof(map) == mapW * mapH + 1);
+    // Initialize the map and get properties
+    Map map;
+    size_t mapW = map.getWidth();
+    size_t mapH = map.getHeight();
 
     // Player properties
     float playerPosX = 7.5;
@@ -123,10 +108,10 @@ int main(){
     // Draw the top-down map
     for (size_t x = 0; x < mapW; x++){
         for (size_t y = 0; y < mapH; y++){
-            if (map[y * mapW + x] == ' ') continue;
+            if (map.isEmptyAt(x, y)) continue;
             size_t imgX = x * rectW;
             size_t imgY = y * rectH;
-            size_t textureIdx = map[y * mapW + x] - '0';
+            size_t textureIdx = map.getValueAt(x, y);
             assert(textureIdx < textureCount);
             canvas.drawRectangle(imgX, imgY, rectW, rectH, texture[textureIdx*textureSize]);
         }
@@ -151,9 +136,9 @@ int main(){
             canvas.drawPixel(x, y, color);
 
             // Ray hits a block, render vertical column for 3D view
-            if (map[(int) targetY * mapW + (int) targetX] != ' '){
+            if (!map.isEmptyAt((int) targetX, (int) targetY)){
                 size_t h = winH / (dist * cos(rotation - playerRot)); // Fix fisheye distortion
-                size_t textureIdx = map[(int)targetY * mapW + (int)targetX] - '0';
+                size_t textureIdx = map.getValueAt((int) targetX, (int) targetY);
                 assert(textureIdx < textureCount);
                 
                 // Get fractional part of targetX and targetY to determine the 
