@@ -7,135 +7,60 @@
 #include "utils.h"
 #include "canvas.h"
 #include "map.h"
+#include "texture.h"
 #include "player.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
 
-#define PI 3.14159265
-// #define _BG_GRADIENT_
+#define PI              3.14159265
 
-bool loadTexture(const std::string filename,
-                 std::vector<uint32_t>& texture,
-                 size_t& size,
-                 size_t& count){
-    int numChannels = -1;
-    int w;
-    int h;
-    unsigned char* img = stbi_load(filename.c_str(), &w, &h, &numChannels, 0);
+#define CANVAS_WIDTH    1024
+#define CANVAS_HEIGHT   512
+#define RECT_WIDTH      ((CANVAS_WIDTH/2) / MAP_WIDTH)
+#define RECT_HEIGHT     (CANVAS_HEIGHT / MAP_HEIGHT)
 
-    if (!img){
-        std::cerr << "Error: Cannot load textures" << std::endl;
-        return false;
-    }
-    if (numChannels != 4){
-        std::cerr << "Error: Texture is not 32-bit image" << std::endl;
-        stbi_image_free(img);
-        return false;
-    }
 
-    count = w / h;
-    size = w / count;
-    std::cout << "Count of textures = " << count << "; size of texture = " << size << std::endl;
-    if (w != h * int(count)){
-        std::cerr << "Error: Textures are not packed horizontally" << std::endl;
-        stbi_image_free(img);
-        return false;
-    }
+bool renderMap(Canvas& canvas, Map& map, Texture& textures){
+    // Scale the top-down map to window size and display it
+    const size_t textureCount = textures.getCount();
+    const size_t textureSize = textures.getSize();
 
-    texture = std::vector<uint32_t>(w * h);
-    for (int x = 0; x < w; x++){
-        for (int y = 0; y < h; y++){
-            uint8_t r = img[(y*w + x)*4];
-            uint8_t g = img[(y*w + x)*4 + 1];
-            uint8_t b = img[(y*w + x)*4 + 2];
-            uint8_t a = img[(y*w + x)*4 + 3];
-            texture[y*w + x] = packColor(r, g, b, a);
+    // Draw the top-down map
+    for (size_t x = 0; x < MAP_WIDTH; x++){
+        for (size_t y = 0; y < MAP_HEIGHT; y++){
+            if (map.isEmptyAt(x, y)) continue;
+            size_t imgX = x * RECT_WIDTH;
+            size_t imgY = y * RECT_HEIGHT;
+            size_t textureIdx = map.getValueAt(x, y);
+            assert(textureIdx < textureCount);
+            // Pick a pixel to represent the block
+            canvas.drawRectangle(imgX, imgY, RECT_WIDTH, RECT_HEIGHT, textures.getValueAt(textureIdx, 0, 0));
         }
     }
-    stbi_image_free(img);
     return true;
 }
 
-// Return texture data at the specific column
-std::vector<uint32_t> getTextureColumn(const std::vector<uint32_t>& texture,
-                                       const size_t textureCount,
-                                       const size_t textureSize,
-                                       const size_t textureIdx,
-                                       const size_t start,
-                                       const size_t colH){
-    const size_t w = textureSize * textureCount;
-    const size_t h = textureSize;
-    assert(texture.size() == w * h && start < textureSize && textureIdx < textureCount);
+// Cast field of view on the top-down map and 3D view
+bool renderWorld(Canvas& canvas, Map& map, Texture& textures, Player& player){
+    const size_t textureCount = textures.getCount();
+    const size_t textureSize = textures.getSize();
 
-    std::vector<uint32_t> col(colH);
-    for (size_t y = 0; y < colH; y++){   
-        size_t tx = textureIdx * textureSize + start;
-        size_t ty = textureSize * (y / (float) colH);
-        col[y] = texture[ty * w + tx];
-    }
-    return col;
-}
-
-int main(){
-    // Window (canvas) properties
-    const size_t winW = 1024; // Window width (top-down map and 3D view)
-    const size_t winH = 512; // Window height
-    Canvas canvas(winW, winH, packColor(255, 255, 255)); // Initialize the canvas
-
-    // Initialize the map and get properties
-    Map map;
-    size_t mapW = map.getWidth();
-    size_t mapH = map.getHeight();
-
-    // Initialize the player
-    Player player(7.5, 7.5, 45 * PI / 180, PI / 3);
-
-    std::vector<uint32_t> texture;
-    size_t textureSize;
-    size_t textureCount;
-    if (!loadTexture("./textures/wallTextures.png", texture, textureSize, textureCount)){
-        std::cerr << "Failed to load wall textures" << std::endl;
-        return -1;
-    }
-
-    // Scale the top-down map to window size and display it
-    const size_t rectW = (winW/2) / mapW;
-    const size_t rectH = winH / mapH;
-
-    // Draw the top-down map
-    for (size_t x = 0; x < mapW; x++){
-        for (size_t y = 0; y < mapH; y++){
-            if (map.isEmptyAt(x, y)) continue;
-            size_t imgX = x * rectW;
-            size_t imgY = y * rectH;
-            size_t textureIdx = map.getValueAt(x, y);
-            assert(textureIdx < textureCount);
-            canvas.drawRectangle(imgX, imgY, rectW, rectH, texture[textureIdx*textureSize]);
-        }
-    }
-
-    // Draw player on the top-down map
-    canvas.drawRectangle(player.x * rectW, player.y * rectH, 5, 5, packColor(0, 0, 255));
-    
-    // Cast field of view on the top-down map and 3D view
-    for(size_t i = 0; i < winW/2; i++){
-        float rotation = player.rot - player.fov / 2 + player.fov * (i/(float)(winW/2));
+    for(size_t i = 0; i < CANVAS_WIDTH/2; i++){
+        float rotation = player.rot - player.fov / 2 + player.fov * (i/(float)(CANVAS_WIDTH/2));
         uint32_t color = packColor(255, 0, 0);
         
         // Cast single ray in certain direction
         for (float dist = 0; dist < 23; dist += 0.01){
             float targetX = player.x + dist * cos(rotation);
             float targetY = player.y + dist * sin(rotation);
-            int x = targetX * rectW;
-            int y = targetY * rectH;
+            int x = targetX * RECT_WIDTH;
+            int y = targetY * RECT_HEIGHT;
 
-            // FOV part
+            // Display FOV on the map if map is already rendered
             canvas.drawPixel(x, y, color);
 
             // Ray hits a block, render vertical column for 3D view
             if (!map.isEmptyAt((int) targetX, (int) targetY)){
-                size_t h = winH / (dist * cos(rotation - player.rot)); // Fix fisheye distortion
+                size_t h = CANVAS_HEIGHT / (dist * cos(rotation - player.rot)); // Fix fisheye distortion
                 size_t textureIdx = map.getValueAt((int) targetX, (int) targetY);
                 assert(textureIdx < textureCount);
                 
@@ -148,20 +73,55 @@ int main(){
                 assert(start >= 0 && start < (int) textureSize);
 
                 // Write the specific column
-                std::vector<uint32_t> col = getTextureColumn(texture, textureCount, textureSize,
-                                                             textureIdx, start, h);
-                x = winW/2 + i;
+                std::vector<uint32_t> col = textures.getTextureColumn(textureIdx, start, h);
+                x = CANVAS_WIDTH/2 + i;
                 for (size_t j = 0; j < h; j++){
-                    y = winH/2 - h/2 + j;
-                    if (x < 0 || y >= (int) winH) continue;
+                    y = CANVAS_HEIGHT/2 - h/2 + j;
+                    if (x < 0 || y >= (int) CANVAS_HEIGHT) continue;
                     canvas.drawPixel(x, y, col[j]);
                 }
                 break;
             }
         }
     }
+    return true;
+}
+
+bool renderPlayer(Canvas& canvas, Player& player){
+    // Draw player on the top-down map
+    canvas.drawRectangle(player.x * RECT_WIDTH, player.y * RECT_HEIGHT, 5, 5, packColor(0, 0, 255));
+    return true;
+}
+
+void render(Canvas& canvas, Map& map, Texture& textures, Player& player){
+    canvas.clearCanvas(packColor(255, 255, 255));
+
+    assert(renderWorld(canvas, map, textures, player));
+    assert(renderMap(canvas, map, textures));
+    assert(renderPlayer(canvas, player));
+}
+
+
+int main(){
+    // Window (canvas) properties
+    Canvas canvas(CANVAS_WIDTH, CANVAS_HEIGHT, packColor(255, 255, 255)); // Initialize the canvas
+
+    // Initialize the map and get properties
+    Map map;
+
+    // Initialize the player
+    Player player(7.5, 7.5, 45 * PI / 180, PI / 3);
+    
+    // Initialize the wall textures
+    Texture wallTextures("./textures/wallTextures.png");
+    if (wallTextures.isEmpty()){
+        std::cerr << "Failed to load wall textures" << std::endl;
+        return -1;
+    }
+
+    render(canvas, map, wallTextures, player);
 
     // Generate 24-bit color image (.ppm)
-    generateImage("./img/output_8.ppm", canvas.getImage(), winW, winH);
+    generateImage("./img/output_8.ppm", canvas.getImage(), CANVAS_WIDTH, CANVAS_HEIGHT);
     return 0;
 }

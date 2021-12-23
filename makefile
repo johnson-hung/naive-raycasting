@@ -10,10 +10,10 @@ run:
 
 #================
 
-raycasting: raycasting.o utils.o canvas.o map.o player.o
-	g++ -o raycasting raycasting.o utils.o canvas.o map.o player.o
+raycasting: raycasting.o utils.o canvas.o map.o texture.o player.o
+	g++ -o raycasting raycasting.o utils.o canvas.o map.o texture.o player.o
 
-raycasting.o: raycasting.cpp stb_image.h utils.h canvas.h map.h player.h
+raycasting.o: raycasting.cpp stb_image.h utils.h canvas.h map.h texture.h player.h
 	g++ -c raycasting.cpp
 
 utils.o: utils.cpp utils.h
@@ -24,6 +24,9 @@ canvas.o: canvas.cpp canvas.h
 
 map.o: map.cpp map.h
 	g++ -c map.cpp
+
+texture.o: texture.cpp texture.h
+	g++ -c texture.cpp
 
 player.o: player.cpp player.h
 	g++ -c player.cpp
