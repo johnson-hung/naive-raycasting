@@ -7,6 +7,7 @@
 #include "utils.h"
 #include "canvas.h"
 #include "map.h"
+#include "player.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -87,11 +88,8 @@ int main(){
     size_t mapW = map.getWidth();
     size_t mapH = map.getHeight();
 
-    // Player properties
-    float playerPosX = 7.5;
-    float playerPosY = 7.5;
-    float playerRot = 45 * PI / 180; // Rotation
-    float playerFov = PI / 3; // Field of view
+    // Initialize the player
+    Player player(7.5, 7.5, 45 * PI / 180, PI / 3);
 
     std::vector<uint32_t> texture;
     size_t textureSize;
@@ -118,17 +116,17 @@ int main(){
     }
 
     // Draw player on the top-down map
-    canvas.drawRectangle(playerPosX * rectW, playerPosY * rectH, 5, 5, packColor(0, 0, 255));
+    canvas.drawRectangle(player.x * rectW, player.y * rectH, 5, 5, packColor(0, 0, 255));
     
     // Cast field of view on the top-down map and 3D view
     for(size_t i = 0; i < winW/2; i++){
-        float rotation = playerRot - playerFov / 2 + playerFov * (i/(float)(winW/2));
+        float rotation = player.rot - player.fov / 2 + player.fov * (i/(float)(winW/2));
         uint32_t color = packColor(255, 0, 0);
         
         // Cast single ray in certain direction
         for (float dist = 0; dist < 23; dist += 0.01){
-            float targetX = playerPosX + dist * cos(rotation);
-            float targetY = playerPosY + dist * sin(rotation);
+            float targetX = player.x + dist * cos(rotation);
+            float targetY = player.y + dist * sin(rotation);
             int x = targetX * rectW;
             int y = targetY * rectH;
 
@@ -137,7 +135,7 @@ int main(){
 
             // Ray hits a block, render vertical column for 3D view
             if (!map.isEmptyAt((int) targetX, (int) targetY)){
-                size_t h = winH / (dist * cos(rotation - playerRot)); // Fix fisheye distortion
+                size_t h = winH / (dist * cos(rotation - player.rot)); // Fix fisheye distortion
                 size_t textureIdx = map.getValueAt((int) targetX, (int) targetY);
                 assert(textureIdx < textureCount);
                 
