@@ -24,6 +24,9 @@ class Canvas{
 
         // Return current image
         std::vector<uint32_t> getImage(){ return img; }
+
+        size_t getWidth(){ return w; }
+        size_t getHeight(){ return h; }
 };
 
 #endif
