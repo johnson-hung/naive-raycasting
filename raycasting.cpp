@@ -9,7 +9,7 @@
 #include "map.h"
 #include "texture.h"
 #include "player.h"
-
+#include "sprite.h"
 
 #define PI              3.14159265
 
@@ -93,12 +93,20 @@ bool renderPlayer(Canvas& canvas, Player& player){
     return true;
 }
 
-void render(Canvas& canvas, Map& map, Texture& textures, Player& player){
+bool renderSprites(Canvas& canvas, std::vector<Sprite>& sprites){
+    for (size_t i = 0; i < sprites.size(); i++){
+        canvas.drawRectangle(sprites[i].x * RECT_WIDTH, sprites[i].y * RECT_HEIGHT, 5, 5, packColor(0, 255, 0));
+    }
+    return true;
+}
+
+void render(Canvas& canvas, Map& map, Texture& textures, Player& player, std::vector<Sprite>& sprites){
     canvas.clearCanvas(packColor(255, 255, 255));
 
     assert(renderWorld(canvas, map, textures, player));
     assert(renderMap(canvas, map, textures));
     assert(renderPlayer(canvas, player));
+    assert(renderSprites(canvas, sprites));
 }
 
 
@@ -119,9 +127,17 @@ int main(){
         return -1;
     }
 
-    render(canvas, map, wallTextures, player);
+    // Initialize monster sprites
+    size_t numMonsters = 3;
+    std::vector<Sprite> monsters(numMonsters);
+    monsters[0] = (struct Sprite){6.5, 6.5, 0};
+    monsters[1] = (struct Sprite){7.5, 5.5, 1};
+    monsters[2] = (struct Sprite){8.0, 8.0, 1};
+
+    // Render current world and objects
+    render(canvas, map, wallTextures, player, monsters);
 
     // Generate 24-bit color image (.ppm)
-    generateImage("./img/output_8.ppm", canvas.getImage(), CANVAS_WIDTH, CANVAS_HEIGHT);
+    generateImage("./img/output_9.ppm", canvas.getImage(), CANVAS_WIDTH, CANVAS_HEIGHT);
     return 0;
 }
