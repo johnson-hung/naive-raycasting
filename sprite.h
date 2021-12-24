@@ -6,7 +6,7 @@
 struct Sprite{
     float x;
     float y;
-    size_t textureId;
+    size_t textureIdx;
 };
 
 #endif
