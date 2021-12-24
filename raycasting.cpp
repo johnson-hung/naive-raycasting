@@ -18,11 +18,57 @@
 #define RECT_WIDTH      ((CANVAS_WIDTH/2) / MAP_WIDTH)
 #define RECT_HEIGHT     (CANVAS_HEIGHT / MAP_HEIGHT)
 
+bool renderWorldSprite(Canvas& canvas, 
+                       Sprite& sprite, 
+                       Texture& texture, 
+                       Player& player, 
+                       std::vector<float>& buf){ // Depth buffer
+    // View player as center, get direction of the sprite 
+    float spriteDir = atan2(sprite.y - player.y, sprite.x - player.x);
+
+    // Recalculate spriteDir to let it be in range [-PI, PI]
+    while (spriteDir - player.rot > PI) spriteDir -= 2*PI;
+    while (spriteDir - player.rot < -PI) spriteDir += 2*PI;
+
+    // Calculate distance between the player and the sprite, then get displayed sprite size
+    float dist = std::sqrt(pow(player.x - sprite.x, 2) + pow(player.y - sprite.y, 2));
+    size_t spriteSize = std::min(1000, static_cast<int>(CANVAS_HEIGHT/dist));
+
+    // Calculate (x, y) position to start rendering
+    int startX = (spriteDir - player.rot)/player.fov*(CANVAS_WIDTH/2) + (CANVAS_WIDTH/2)/2 - texture.getSize()/2;
+    int startY = CANVAS_HEIGHT/2 - spriteSize/2;
+    for (size_t i = 0; i < spriteSize; i++){
+        if (startX + (int)i < 0 || startX + (int)i >= CANVAS_WIDTH/2) continue;
+        if (buf[startX + i] < dist) continue; // Current column is blocked
+        for (size_t j = 0; j < spriteSize; j++){
+            if (startY + (int)j < 0 || startY + (int)j >= CANVAS_HEIGHT) continue;
+            float scale = (float) texture.getSize() / spriteSize;
+            uint32_t color = texture.getValueAt(sprite.textureIdx, i * scale, j * scale);
+            uint8_t r;
+            uint8_t g;
+            uint8_t b;
+            uint8_t a;
+            unpackColor(color, r, g, b, a);
+            if (a == 255){
+                canvas.drawPixel(CANVAS_WIDTH/2 + startX + i, startY + j, color);
+            }
+        }
+    }
+    return true;
+}
 
 // Cast field of view on the top-down map and 3D view
-bool renderWorld(Canvas& canvas, Map& map, Texture& textures, Player& player){
+bool renderWorld(Canvas& canvas,
+                 Map& map,
+                 Texture& textures,
+                 Texture& spriteTextures,
+                 Player& player,
+                 std::vector<Sprite>& sprites){
     const size_t textureCount = textures.getCount();
     const size_t textureSize = textures.getSize();
+
+    // Cache closest distance between player and the block at x = i
+    std::vector<float> distBuffer(CANVAS_WIDTH/2, 1e3);
 
     for(size_t i = 0; i < CANVAS_WIDTH/2; i++){
         float rotation = player.rot - player.fov / 2 + player.fov * (i/(float)(CANVAS_WIDTH/2));
@@ -40,10 +86,13 @@ bool renderWorld(Canvas& canvas, Map& map, Texture& textures, Player& player){
 
             // Ray hits a block, render vertical column for 3D view
             if (!map.isEmptyAt((int) targetX, (int) targetY)){
-                size_t h = CANVAS_HEIGHT / (dist * cos(rotation - player.rot)); // Fix fisheye distortion
                 size_t textureIdx = map.getValueAt((int) targetX, (int) targetY);
                 assert(textureIdx < textureCount);
                 
+                float distFixed = dist * cos(rotation - player.rot);
+                distBuffer[i] = distFixed;
+                size_t h = CANVAS_HEIGHT / distFixed; // Fix fisheye distortion
+
                 // Get fractional part of targetX and targetY to determine the 
                 // position of the hitpoint (top/bottom or left/right side of block)
                 float hitX = targetX - floor(targetX + 0.5); // ~0 -> hit left/right side of block
@@ -63,6 +112,23 @@ bool renderWorld(Canvas& canvas, Map& map, Texture& textures, Player& player){
                 break;
             }
         }
+    }
+
+    for (size_t i = 0; i < sprites.size(); i++){
+        assert(renderWorldSprite(canvas, sprites[i], spriteTextures, player, distBuffer));
+    }
+    return true;
+}
+
+bool renderMapPlayer(Canvas& canvas, Player& player){
+    // Draw player on the top-down map
+    canvas.drawRectangle(player.x * RECT_WIDTH, player.y * RECT_HEIGHT, 5, 5, packColor(0, 0, 255));
+    return true;
+}
+
+bool renderMapSprites(Canvas& canvas, std::vector<Sprite>& sprites){
+    for (size_t i = 0; i < sprites.size(); i++){
+        canvas.drawRectangle(sprites[i].x * RECT_WIDTH, sprites[i].y * RECT_HEIGHT, 5, 5, packColor(0, 255, 0));
     }
     return true;
 }
@@ -87,23 +153,15 @@ bool renderMap(Canvas& canvas, Map& map, Texture& textures){
     return true;
 }
 
-bool renderMapPlayer(Canvas& canvas, Player& player){
-    // Draw player on the top-down map
-    canvas.drawRectangle(player.x * RECT_WIDTH, player.y * RECT_HEIGHT, 5, 5, packColor(0, 0, 255));
-    return true;
-}
-
-bool renderMapSprites(Canvas& canvas, std::vector<Sprite>& sprites){
-    for (size_t i = 0; i < sprites.size(); i++){
-        canvas.drawRectangle(sprites[i].x * RECT_WIDTH, sprites[i].y * RECT_HEIGHT, 5, 5, packColor(0, 255, 0));
-    }
-    return true;
-}
-
-void render(Canvas& canvas, Map& map, Texture& textures, Player& player, std::vector<Sprite>& sprites){
+void render(Canvas& canvas,
+            Map& map, 
+            Texture& textures, 
+            Texture& spriteTextures, 
+            Player& player, 
+            std::vector<Sprite>& sprites){
     canvas.clearCanvas(packColor(255, 255, 255));
 
-    assert(renderWorld(canvas, map, textures, player));
+    assert(renderWorld(canvas, map, textures, spriteTextures, player, sprites));
     assert(renderMap(canvas, map, textures));
     assert(renderMapPlayer(canvas, player));
     assert(renderMapSprites(canvas, sprites));
@@ -118,11 +176,12 @@ int main(){
     Map map;
 
     // Initialize the player
-    Player player(7.5, 7.5, 45 * PI / 180, PI / 3);
+    Player player(7.5, 7.5, -120 * PI / 180, PI / 3);
     
     // Initialize the wall textures
     Texture wallTextures("./textures/wallTextures.png");
-    if (wallTextures.isEmpty()){
+    Texture monsterTextures("./textures/monsterTextures.png");
+    if (wallTextures.isEmpty() || monsterTextures.isEmpty()){
         std::cerr << "Failed to load wall textures" << std::endl;
         return -1;
     }
@@ -130,14 +189,14 @@ int main(){
     // Initialize monster sprites
     size_t numMonsters = 3;
     std::vector<Sprite> monsters(numMonsters);
-    monsters[0] = (struct Sprite){6.5, 6.5, 0};
-    monsters[1] = (struct Sprite){7.5, 5.5, 1};
-    monsters[2] = (struct Sprite){8.0, 8.0, 1};
+    monsters[0] = (struct Sprite){4.5, 4.5, 3};
+    monsters[1] = (struct Sprite){6.5, 6.0, 2};
+    monsters[2] = (struct Sprite){8.0, 8.0, 2};
 
     // Render current world and objects
-    render(canvas, map, wallTextures, player, monsters);
+    render(canvas, map, wallTextures, monsterTextures, player, monsters);
 
     // Generate 24-bit color image (.ppm)
-    generateImage("./img/output_9.ppm", canvas.getImage(), CANVAS_WIDTH, CANVAS_HEIGHT);
+    generateImage("./img/output_10.ppm", canvas.getImage(), CANVAS_WIDTH, CANVAS_HEIGHT);
     return 0;
 }
