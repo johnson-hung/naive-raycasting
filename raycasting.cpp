@@ -19,26 +19,6 @@
 #define RECT_HEIGHT     (CANVAS_HEIGHT / MAP_HEIGHT)
 
 
-bool renderMap(Canvas& canvas, Map& map, Texture& textures){
-    // Scale the top-down map to window size and display it
-    const size_t textureCount = textures.getCount();
-    const size_t textureSize = textures.getSize();
-
-    // Draw the top-down map
-    for (size_t x = 0; x < MAP_WIDTH; x++){
-        for (size_t y = 0; y < MAP_HEIGHT; y++){
-            if (map.isEmptyAt(x, y)) continue;
-            size_t imgX = x * RECT_WIDTH;
-            size_t imgY = y * RECT_HEIGHT;
-            size_t textureIdx = map.getValueAt(x, y);
-            assert(textureIdx < textureCount);
-            // Pick a pixel to represent the block
-            canvas.drawRectangle(imgX, imgY, RECT_WIDTH, RECT_HEIGHT, textures.getValueAt(textureIdx, 0, 0));
-        }
-    }
-    return true;
-}
-
 // Cast field of view on the top-down map and 3D view
 bool renderWorld(Canvas& canvas, Map& map, Texture& textures, Player& player){
     const size_t textureCount = textures.getCount();
@@ -87,13 +67,33 @@ bool renderWorld(Canvas& canvas, Map& map, Texture& textures, Player& player){
     return true;
 }
 
-bool renderPlayer(Canvas& canvas, Player& player){
+bool renderMap(Canvas& canvas, Map& map, Texture& textures){
+    // Scale the top-down map to window size and display it
+    const size_t textureCount = textures.getCount();
+    const size_t textureSize = textures.getSize();
+
+    // Draw the top-down map
+    for (size_t x = 0; x < MAP_WIDTH; x++){
+        for (size_t y = 0; y < MAP_HEIGHT; y++){
+            if (map.isEmptyAt(x, y)) continue;
+            size_t imgX = x * RECT_WIDTH;
+            size_t imgY = y * RECT_HEIGHT;
+            size_t textureIdx = map.getValueAt(x, y);
+            assert(textureIdx < textureCount);
+            // Pick a pixel to represent the block
+            canvas.drawRectangle(imgX, imgY, RECT_WIDTH, RECT_HEIGHT, textures.getValueAt(textureIdx, 0, 0));
+        }
+    }
+    return true;
+}
+
+bool renderMapPlayer(Canvas& canvas, Player& player){
     // Draw player on the top-down map
     canvas.drawRectangle(player.x * RECT_WIDTH, player.y * RECT_HEIGHT, 5, 5, packColor(0, 0, 255));
     return true;
 }
 
-bool renderSprites(Canvas& canvas, std::vector<Sprite>& sprites){
+bool renderMapSprites(Canvas& canvas, std::vector<Sprite>& sprites){
     for (size_t i = 0; i < sprites.size(); i++){
         canvas.drawRectangle(sprites[i].x * RECT_WIDTH, sprites[i].y * RECT_HEIGHT, 5, 5, packColor(0, 255, 0));
     }
@@ -105,8 +105,8 @@ void render(Canvas& canvas, Map& map, Texture& textures, Player& player, std::ve
 
     assert(renderWorld(canvas, map, textures, player));
     assert(renderMap(canvas, map, textures));
-    assert(renderPlayer(canvas, player));
-    assert(renderSprites(canvas, sprites));
+    assert(renderMapPlayer(canvas, player));
+    assert(renderMapSprites(canvas, sprites));
 }
 
 
