@@ -4,6 +4,7 @@
 #include <cstdint> // Fixed width integer types 
 #include <cassert> // Error handling
 #include <cmath>
+#include <algorithm>
 #include "utils.h"
 #include "canvas.h"
 #include "map.h"
@@ -31,15 +32,14 @@ bool renderWorldSprite(Canvas& canvas,
     while (spriteDir - player.rot < -PI) spriteDir += 2*PI;
 
     // Calculate distance between the player and the sprite, then get displayed sprite size
-    float dist = std::sqrt(pow(player.x - sprite.x, 2) + pow(player.y - sprite.y, 2));
-    size_t spriteSize = std::min(1000, static_cast<int>(CANVAS_HEIGHT/dist));
+    size_t spriteSize = std::min(1000, static_cast<int>(CANVAS_HEIGHT/sprite.distToPlayer));
 
     // Calculate (x, y) position to start rendering
     int startX = (spriteDir - player.rot)/player.fov*(CANVAS_WIDTH/2) + (CANVAS_WIDTH/2)/2 - texture.getSize()/2;
     int startY = CANVAS_HEIGHT/2 - spriteSize/2;
     for (size_t i = 0; i < spriteSize; i++){
         if (startX + (int)i < 0 || startX + (int)i >= CANVAS_WIDTH/2) continue;
-        if (buf[startX + i] < dist) continue; // Current column is blocked
+        if (buf[startX + i] < sprite.distToPlayer) continue; // Current column is blocked
         for (size_t j = 0; j < spriteSize; j++){
             if (startY + (int)j < 0 || startY + (int)j >= CANVAS_HEIGHT) continue;
             float scale = (float) texture.getSize() / spriteSize;
@@ -113,6 +113,12 @@ bool renderWorld(Canvas& canvas,
             }
         }
     }
+
+    // Sort sprites by distance first and then render them
+    for (size_t i = 0; i < sprites.size(); i++){
+        sprites[i].distToPlayer = std::sqrt(pow(player.x - sprites[i].x, 2) + pow(player.y - sprites[i].y, 2));
+    }
+    std::sort(sprites.begin(), sprites.end(), compareSpriteDistance);
 
     for (size_t i = 0; i < sprites.size(); i++){
         assert(renderWorldSprite(canvas, sprites[i], spriteTextures, player, distBuffer));
@@ -189,14 +195,14 @@ int main(){
     // Initialize monster sprites
     size_t numMonsters = 3;
     std::vector<Sprite> monsters(numMonsters);
-    monsters[0] = (struct Sprite){4.5, 4.5, 3};
-    monsters[1] = (struct Sprite){6.5, 6.0, 2};
-    monsters[2] = (struct Sprite){8.0, 8.0, 2};
+    monsters[0] = (struct Sprite){6.4, 6.2, 2, 0};
+    monsters[1] = (struct Sprite){4.5, 4.5, 3, 0};
+    monsters[2] = (struct Sprite){8.0, 8.0, 2, 0};
 
     // Render current world and objects
     render(canvas, map, wallTextures, monsterTextures, player, monsters);
 
     // Generate 24-bit color image (.ppm)
-    generateImage("./img/output_10.ppm", canvas.getImage(), CANVAS_WIDTH, CANVAS_HEIGHT);
+    generateImage("./img/output_11.ppm", canvas.getImage(), CANVAS_WIDTH, CANVAS_HEIGHT);
     return 0;
 }
