@@ -1,3 +1,6 @@
+#ifndef RAYCASTING_H
+#define RAYCASTING_H
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -173,36 +176,4 @@ void render(Canvas& canvas,
     assert(renderMapSprites(canvas, sprites));
 }
 
-
-int main(){
-    // Window (canvas) properties
-    Canvas canvas(CANVAS_WIDTH, CANVAS_HEIGHT, packColor(255, 255, 255)); // Initialize the canvas
-
-    // Initialize the map and get properties
-    Map map;
-
-    // Initialize the player
-    Player player(7.5, 7.5, -120 * PI / 180, PI / 3);
-    
-    // Initialize the wall textures
-    Texture wallTextures("./textures/wallTextures.png");
-    Texture monsterTextures("./textures/monsterTextures.png");
-    if (wallTextures.isEmpty() || monsterTextures.isEmpty()){
-        std::cerr << "Failed to load wall textures" << std::endl;
-        return -1;
-    }
-
-    // Initialize monster sprites
-    size_t numMonsters = 3;
-    std::vector<Sprite> monsters(numMonsters);
-    monsters[0] = (struct Sprite){6.4, 6.2, 2, 0};
-    monsters[1] = (struct Sprite){4.5, 4.5, 3, 0};
-    monsters[2] = (struct Sprite){8.0, 8.0, 2, 0};
-
-    // Render current world and objects
-    render(canvas, map, wallTextures, monsterTextures, player, monsters);
-
-    // Generate 24-bit color image (.ppm)
-    generateImage("./img/output_11.ppm", canvas.getImage(), CANVAS_WIDTH, CANVAS_HEIGHT);
-    return 0;
-}
+#endif
