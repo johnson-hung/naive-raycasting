@@ -11,6 +11,7 @@
 #include "render.h"
 #include "settings.h"
 #include "SDL.h"
+#include "SDL_ttf.h"
 
 
 int main() {
@@ -41,8 +42,9 @@ int main() {
     monsters[3] = (struct Sprite){14.0, 14.2, 0, 0};
     monsters[4] = (struct Sprite){12.8, 6.0, 1, 0};
 
-    SDL_Window *window = nullptr;
-    SDL_Renderer *renderer = nullptr;
+    SDL_Window* window = nullptr;
+    SDL_Renderer* renderer = nullptr;
+    TTF_Font* font = nullptr;
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0){
         std::cerr<<"Failed to initialize SDL: "<<SDL_GetError()<<std::endl;
@@ -54,9 +56,27 @@ int main() {
         std::cerr<<"Failed to create window and renderer: "<<SDL_GetError()<<std::endl;
         return -1;                               
     }
-    SDL_Texture *canvasTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888,
+    SDL_Texture* canvasTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888,
                                  SDL_TEXTUREACCESS_STREAMING, CANVAS_WIDTH, CANVAS_HEIGHT);
 
+
+    if (TTF_Init() != 0){
+        std::cerr<<"Failed to create initialize SDL_ttf: "<<TTF_GetError()<<std::endl;
+        return -1;
+    }
+    font = TTF_OpenFont(FONT_FILE, FONT_SIZE);
+    if (!font){
+        std::cerr<<"Failed to load font: "<<TTF_GetError()<<std::endl;
+        return -1;
+    }
+    SDL_Color textColor = {255, 255, 255};
+    SDL_Surface* textSurface = TTF_RenderText_Solid(font, "Press 'E' to start", textColor);
+    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
+    SDL_Rect textRect;
+    textRect.x = TEXTFIELD_X;
+    textRect.y = TEXTFIELD_Y;
+    textRect.w = textSurface->w;
+    textRect.h = textSurface->h;
 
     auto startTime = std::chrono::high_resolution_clock::now();
     while (1){
@@ -121,11 +141,14 @@ int main() {
         SDL_UpdateTexture(canvasTexture, NULL, reinterpret_cast<void*>(canvas.getImage().data()), CANVAS_WIDTH*4);
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, canvasTexture, NULL, NULL);
+        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
         SDL_RenderPresent(renderer);
     }
 
     // Clean up
+    SDL_FreeSurface(textSurface);
     SDL_DestroyTexture(canvasTexture);
+    SDL_DestroyTexture(textTexture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 

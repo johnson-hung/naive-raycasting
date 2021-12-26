@@ -2,7 +2,7 @@ PROGRAM = game
 CXXFLAGS += -std=c++11 
 INCLUDES = -I/opt/homebrew/include/SDL2 -D_THREAD_SAFE
 LINKS = -L/opt/homebrew/lib
-LINK_FLAGS = -lSDL2
+LINK_FLAGS = -lSDL2 -lSDL2_ttf
 MKDIR_P = mkdir -p
 OUT_DIR = ./build/
 
