@@ -1,7 +1,8 @@
 #include <vector>
 #include <string>
-#include "map.h"
 #include <iostream>
+#include "map.h"
+#include "settings.h"
 
 Map::Map(){
     std::string mapData = MAP;

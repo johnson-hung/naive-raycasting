@@ -9,22 +9,23 @@
 #include "player.h"
 #include "sprite.h"
 #include "render.h"
+#include "settings.h"
 #include "SDL.h"
 
 int main() {
     // Window (canvas) properties
-    Canvas canvas(CANVAS_WIDTH, CANVAS_HEIGHT, packColor(255, 255, 255)); // Initialize the canvas
+    Canvas canvas(CANVAS_WIDTH, CANVAS_HEIGHT, 0); // Initialize the canvas
 
     // Initialize the map and get properties
     Map map;
 
     // Initialize the player
-    Player player(7.5, 7.5, -120 * PI / 180, PI / 3);
+    Player player(PLAYER_DEFAULT_X, PLAYER_DEFAULT_Y, 0, PLAYER_DEFAULT_FOV);
     player.printPlayerPosition();
     
     // Initialize the wall textures
-    Texture wallTextures("./textures/wallTextures.bmp", SDL_PIXELFORMAT_ABGR8888);
-    Texture monsterTextures("./textures/monsterTextures.bmp", SDL_PIXELFORMAT_ABGR8888);
+    Texture wallTextures(TEXTURE_FILE_WALL, SDL_PIXELFORMAT_ABGR8888);
+    Texture monsterTextures(TEXTURE_FILE_MONS, SDL_PIXELFORMAT_ABGR8888);
     if (wallTextures.isEmpty() || monsterTextures.isEmpty()){
         std::cerr << "Failed to load wall textures" << std::endl;
         return -1;

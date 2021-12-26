@@ -14,29 +14,7 @@
 #include "texture.h"
 #include "player.h"
 #include "sprite.h"
-
-
-#define PI                  3.14159265
-
-#define CANVAS_WIDTH        512
-#define CANVAS_HEIGHT       640
-#define MAIN_WIDTH          512
-#define MAIN_HEIGHT         512
-#define RECT_WIDTH          MAIN_WIDTH / MAP_WIDTH
-#define RECT_HEIGHT         MAIN_HEIGHT / MAP_HEIGHT
-
-#define HUD_DISPLAY         1
-#define HUD_WIDTH           CANVAS_WIDTH
-#define HUD_HEIGHT          128
-#define HUD_SHIFT_X         0
-#define HUD_SHIFT_Y         CANVAS_HEIGHT - MAP_DISPLAY_HEIGHT
-
-#define MAP_DISPLAY         1
-#define MAP_DISPLAY_WIDTH   128
-#define MAP_DISPLAY_HEIGHT  128
-#define MAP_RECT_WIDTH      MAP_DISPLAY_WIDTH / MAP_WIDTH
-#define MAP_RECT_HEIGHT     MAP_DISPLAY_HEIGHT / MAP_HEIGHT
-
+#include "settings.h"
 
 bool sortSpritesByDistance(std::vector<Sprite>& sprites, Player& player){
     for (size_t i = 0; i < sprites.size(); i++){
