@@ -15,12 +15,28 @@
 #include "player.h"
 #include "sprite.h"
 
-#define PI              3.14159265
 
-#define CANVAS_WIDTH    1024
-#define CANVAS_HEIGHT   512
-#define RECT_WIDTH      ((CANVAS_WIDTH/2) / MAP_WIDTH)
-#define RECT_HEIGHT     (CANVAS_HEIGHT / MAP_HEIGHT)
+#define PI                  3.14159265
+
+#define CANVAS_WIDTH        512
+#define CANVAS_HEIGHT       640
+#define MAIN_WIDTH          512
+#define MAIN_HEIGHT         512
+#define RECT_WIDTH          MAIN_WIDTH / MAP_WIDTH
+#define RECT_HEIGHT         MAIN_HEIGHT / MAP_HEIGHT
+
+#define HUD_DISPLAY         1
+#define HUD_WIDTH           CANVAS_WIDTH
+#define HUD_HEIGHT          128
+#define HUD_SHIFT_X         0
+#define HUD_SHIFT_Y         CANVAS_HEIGHT - MAP_DISPLAY_HEIGHT
+
+#define MAP_DISPLAY         1
+#define MAP_DISPLAY_WIDTH   128
+#define MAP_DISPLAY_HEIGHT  128
+#define MAP_RECT_WIDTH      MAP_DISPLAY_WIDTH / MAP_WIDTH
+#define MAP_RECT_HEIGHT     MAP_DISPLAY_HEIGHT / MAP_HEIGHT
+
 
 bool sortSpritesByDistance(std::vector<Sprite>& sprites, Player& player){
     for (size_t i = 0; i < sprites.size(); i++){
@@ -46,13 +62,13 @@ bool renderWorldSprite(Canvas& canvas,
     size_t spriteSize = std::min(1000, static_cast<int>(CANVAS_HEIGHT/sprite.distToPlayer));
 
     // Calculate (x, y) position to start rendering
-    int startX = (spriteDir - player.rot)/player.fov*(CANVAS_WIDTH/2) + (CANVAS_WIDTH/2)/2 - texture.getSize()/2;
-    int startY = CANVAS_HEIGHT/2 - spriteSize/2;
+    int startX = (spriteDir-player.rot)/player.fov * MAIN_WIDTH + MAIN_WIDTH/2 - texture.getSize()/2;
+    int startY = MAIN_HEIGHT/2 - spriteSize/2;
     for (size_t i = 0; i < spriteSize; i++){
-        if (startX + (int)i < 0 || startX + (int)i >= CANVAS_WIDTH/2) continue;
+        if (startX + (int)i < 0 || startX + (int)i >= MAIN_WIDTH) continue;
         if (buf[startX + i] < sprite.distToPlayer) continue; // Current column is blocked
         for (size_t j = 0; j < spriteSize; j++){
-            if (startY + (int)j < 0 || startY + (int)j >= CANVAS_HEIGHT) continue;
+            if (startY + (int)j < 0 || startY + (int)j >= MAIN_HEIGHT) continue;
             float scale = (float) texture.getSize() / spriteSize;
             uint32_t color = texture.getValueAt(sprite.textureIdx, i * scale, j * scale);
             uint8_t r;
@@ -61,7 +77,7 @@ bool renderWorldSprite(Canvas& canvas,
             uint8_t a;
             unpackColor(color, r, g, b, a);
             if (a == 255){
-                canvas.drawPixel(CANVAS_WIDTH/2 + startX + i, startY + j, color);
+                canvas.drawPixel(startX + i, startY + j, color);
             }
         }
     }
@@ -75,25 +91,24 @@ bool renderWorld(Canvas& canvas,
                  Texture& spriteTextures,
                  Player& player,
                  std::vector<Sprite>& sprites){
+
+    canvas.drawRectangle(0, 0, MAIN_WIDTH, MAIN_HEIGHT/2, packColor(40, 40, 40)); // Ceiling
+    canvas.drawRectangle(0, MAIN_HEIGHT/2, MAIN_WIDTH, MAIN_HEIGHT/2, packColor(20, 20, 20)); // Floor
+    
     const size_t textureCount = textures.getCount();
     const size_t textureSize = textures.getSize();
 
     // Cache closest distance between player and the block at x = i
-    std::vector<float> distBuffer(CANVAS_WIDTH/2, 1e3);
+    std::vector<float> distBuffer(MAIN_WIDTH, 1e3);
 
-    for(size_t i = 0; i < CANVAS_WIDTH/2; i++){
-        float rotation = player.rot - player.fov / 2 + player.fov * (i/(float)(CANVAS_WIDTH/2));
+    for(size_t i = 0; i < MAIN_WIDTH; i++){
+        float rotation = player.rot - player.fov / 2 + player.fov * (i/(float)MAIN_WIDTH);
         uint32_t color = packColor(255, 0, 0);
         
         // Cast single ray in certain direction
         for (float dist = 0; dist < 23; dist += 0.01){
             float targetX = player.x + dist * cos(rotation);
             float targetY = player.y + dist * sin(rotation);
-            int x = targetX * RECT_WIDTH;
-            int y = targetY * RECT_HEIGHT;
-
-            // Display FOV on the map if map is already rendered
-            canvas.drawPixel(x, y, color);
 
             // Ray hits a block, render vertical column for 3D view
             if (!map.isEmptyAt((int) targetX, (int) targetY)){
@@ -102,7 +117,7 @@ bool renderWorld(Canvas& canvas,
                 
                 float distFixed = dist * cos(rotation - player.rot);
                 distBuffer[i] = distFixed;
-                size_t h = CANVAS_HEIGHT / distFixed; // Fix fisheye distortion
+                size_t h = MAIN_HEIGHT / distFixed; // Fix fisheye distortion
 
                 // Get fractional part of targetX and targetY to determine the 
                 // position of the hitpoint (top/bottom or left/right side of block)
@@ -114,10 +129,11 @@ bool renderWorld(Canvas& canvas,
 
                 // Write the specific column
                 std::vector<uint32_t> col = textures.getTextureColumn(textureIdx, start, h);
-                x = CANVAS_WIDTH/2 + i;
+                int x = i;
+                int y = MAIN_HEIGHT/2 - h/2;
                 for (size_t j = 0; j < h; j++){
-                    y = CANVAS_HEIGHT/2 - h/2 + j;
-                    if (x < 0 || y >= (int) CANVAS_HEIGHT) continue;
+                    y = MAIN_HEIGHT/2 - h/2 + j;
+                    if (x < 0 || y >= (int) MAIN_HEIGHT) continue;
                     canvas.drawPixel(x, y, col[j]);
                 }
                 break;
@@ -135,13 +151,15 @@ bool renderWorld(Canvas& canvas,
 
 bool renderMapPlayer(Canvas& canvas, Player& player){
     // Draw player on the top-down map
-    canvas.drawRectangle(player.x * RECT_WIDTH, player.y * RECT_HEIGHT, 5, 5, packColor(0, 0, 255));
+    canvas.drawRectangle(HUD_SHIFT_X + player.x * MAP_RECT_WIDTH,
+                         HUD_SHIFT_Y + player.y * MAP_RECT_HEIGHT,5, 5, packColor(0, 255, 0));
     return true;
 }
 
 bool renderMapSprites(Canvas& canvas, std::vector<Sprite>& sprites){
     for (size_t i = 0; i < sprites.size(); i++){
-        canvas.drawRectangle(sprites[i].x * RECT_WIDTH, sprites[i].y * RECT_HEIGHT, 5, 5, packColor(0, 255, 0));
+        canvas.drawRectangle(HUD_SHIFT_X + sprites[i].x * MAP_RECT_WIDTH,
+                             HUD_SHIFT_Y + sprites[i].y * MAP_RECT_HEIGHT, 5, 5, packColor(255, 0, 0));
     }
     return true;
 }
@@ -154,15 +172,24 @@ bool renderMap(Canvas& canvas, Map& map, Texture& textures){
     // Draw the top-down map
     for (size_t x = 0; x < MAP_WIDTH; x++){
         for (size_t y = 0; y < MAP_HEIGHT; y++){
-            if (map.isEmptyAt(x, y)) continue;
-            size_t imgX = x * RECT_WIDTH;
-            size_t imgY = y * RECT_HEIGHT;
+            size_t imgX = HUD_SHIFT_X + x * MAP_RECT_WIDTH;
+            size_t imgY = HUD_SHIFT_Y + y * MAP_RECT_HEIGHT;
+            if (map.isEmptyAt(x, y)){
+                canvas.drawRectangle(imgX, imgY, MAP_RECT_WIDTH, MAP_RECT_HEIGHT, packColor(0, 0, 0));
+                continue;
+            }
+
             size_t textureIdx = map.getValueAt(x, y);
             assert(textureIdx < textureCount);
             // Pick a pixel to represent the block
-            canvas.drawRectangle(imgX, imgY, RECT_WIDTH, RECT_HEIGHT, textures.getValueAt(textureIdx, 0, 0));
+            canvas.drawRectangle(imgX, imgY, MAP_RECT_WIDTH, MAP_RECT_HEIGHT, textures.getValueAt(textureIdx, 0, 0));
         }
     }
+    return true;
+}
+
+bool renderHUDPlaceholder(Canvas& canvas){
+    canvas.drawRectangle(HUD_SHIFT_X, HUD_SHIFT_Y, HUD_WIDTH, HUD_HEIGHT, packColor(50, 50, 50));
     return true;
 }
 
@@ -175,9 +202,16 @@ void render(Canvas& canvas,
     canvas.clearCanvas(packColor(255, 255, 255));
 
     assert(renderWorld(canvas, map, textures, spriteTextures, player, sprites));
-    assert(renderMap(canvas, map, textures));
-    assert(renderMapPlayer(canvas, player));
-    assert(renderMapSprites(canvas, sprites));
+
+    if (HUD_DISPLAY){
+        assert(renderHUDPlaceholder(canvas));
+    }
+
+    if (MAP_DISPLAY){
+        assert(renderMap(canvas, map, textures));
+        assert(renderMapPlayer(canvas, player));
+        assert(renderMapSprites(canvas, sprites));
+    }
 }
 
 #endif

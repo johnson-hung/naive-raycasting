@@ -31,14 +31,13 @@ int main() {
     }
 
     // Initialize monster sprites
-    size_t numMonsters = 6;
+    size_t numMonsters = 5;
     std::vector<Sprite> monsters(numMonsters);
     monsters[0] = (struct Sprite){6.4, 6.2, 2, 0};
     monsters[1] = (struct Sprite){4.5, 4.5, 3, 0};
     monsters[2] = (struct Sprite){8.0, 8.0, 2, 0};
     monsters[3] = (struct Sprite){14.0, 14.2, 0, 0};
     monsters[4] = (struct Sprite){12.8, 6.0, 1, 0};
-    monsters[4] = (struct Sprite){2.9, 13.5, 2, 0};
 
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
