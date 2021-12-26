@@ -17,7 +17,9 @@ void Canvas::clearCanvas(const uint32_t color){
 
 // Draw a pixel with given color at (x, y)
 void Canvas::drawPixel(const size_t x, const size_t y, const uint32_t color){
-    assert(img.size() == w*h && x < w && y < h);
+    assert(img.size() == w*h);
+    if (x > w || y > h) return;
+    
     img[y*w + x] = color;
 }
 
