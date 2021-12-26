@@ -8,7 +8,7 @@
 #include "texture.h"
 #include "player.h"
 #include "sprite.h"
-#include "raycasting.h"
+#include "render.h"
 #include "SDL.h"
 
 int main() {
