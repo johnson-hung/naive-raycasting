@@ -1,4 +1,5 @@
 PROGRAM = game
+CXXFLAGS += -std=c++11 
 INCLUDES = -I/opt/homebrew/include/SDL2 -D_THREAD_SAFE
 LINKS = -L/opt/homebrew/lib
 LINK_FLAGS = -lSDL2
@@ -27,19 +28,19 @@ OBJ_FILES = utils.o canvas.o map.o texture.o player.o
 #================
 
 $(PROGRAM): directory $(OBJ_FILES)
-	g++ -o ${OUT_DIR}$(PROGRAM) ${addprefix $(OUT_DIR), $(OBJ_FILES)} $(INCLUDES) game.cpp $(LINKS) $(LINK_FLAGS)
+	g++ $(CXXFLAGS) -o ${OUT_DIR}$(PROGRAM) ${addprefix $(OUT_DIR), $(OBJ_FILES)} $(INCLUDES) game.cpp $(LINKS) $(LINK_FLAGS)
 
 utils.o: utils.cpp utils.h
-	g++ -o ${OUT_DIR}utils.o -c utils.cpp
+	g++ $(CXXFLAGS) -c -o ${OUT_DIR}utils.o utils.cpp
 
 canvas.o: canvas.cpp canvas.h
-	g++ -o ${OUT_DIR}canvas.o -c canvas.cpp
+	g++ $(CXXFLAGS) -c -o ${OUT_DIR}canvas.o canvas.cpp
 
 map.o: map.cpp map.h
-	g++ -o ${OUT_DIR}map.o -c map.cpp
+	g++ $(CXXFLAGS) -c -o ${OUT_DIR}map.o map.cpp
 
 texture.o: texture.cpp texture.h
-	g++ -o ${OUT_DIR}texture.o -c texture.cpp
+	g++ $(CXXFLAGS) -c -o ${OUT_DIR}texture.o texture.cpp
 
 player.o: player.cpp player.h
-	g++ -o ${OUT_DIR}player.o -c player.cpp
+	g++ $(CXXFLAGS) -c -o ${OUT_DIR}player.o player.cpp
