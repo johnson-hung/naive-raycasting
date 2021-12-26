@@ -40,7 +40,7 @@ map.o: map.cpp map.h
 	g++ $(CXXFLAGS) -c -o ${OUT_DIR}map.o map.cpp
 
 texture.o: texture.cpp texture.h
-	g++ $(CXXFLAGS) -c -o ${OUT_DIR}texture.o texture.cpp
+	g++ $(CXXFLAGS) -c -o ${OUT_DIR}texture.o $(INCLUDES) texture.cpp
 
 player.o: player.cpp player.h
 	g++ $(CXXFLAGS) -c -o ${OUT_DIR}player.o player.cpp

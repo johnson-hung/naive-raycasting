@@ -23,8 +23,8 @@ int main() {
     player.printPlayerPosition();
     
     // Initialize the wall textures
-    Texture wallTextures("./textures/wallTextures.png");
-    Texture monsterTextures("./textures/monsterTextures.png");
+    Texture wallTextures("./textures/wallTextures.bmp", SDL_PIXELFORMAT_ABGR8888);
+    Texture monsterTextures("./textures/monsterTextures.bmp", SDL_PIXELFORMAT_ABGR8888);
     if (wallTextures.isEmpty() || monsterTextures.isEmpty()){
         std::cerr << "Failed to load wall textures" << std::endl;
         return -1;

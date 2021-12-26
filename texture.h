@@ -14,7 +14,7 @@ class Texture{
         size_t count; // Total count of textures in the image
 
     public:
-        Texture(const std::string filename);
+        Texture(const std::string filename, const uint32_t format);
 
         // Get data at (x, y) in the texture with textureIdx
         uint32_t& getValueAt(const size_t textureIdx, const size_t x, const size_t y);
