@@ -12,6 +12,7 @@
 #include "settings.h"
 #include "SDL.h"
 
+
 int main() {
     // Window (canvas) properties
     Canvas canvas(CANVAS_WIDTH, CANVAS_HEIGHT, 0); // Initialize the canvas
@@ -43,12 +44,13 @@ int main() {
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
 
-    if (SDL_Init(SDL_INIT_VIDEO)){
+    if (SDL_Init(SDL_INIT_VIDEO) != 0){
         std::cerr<<"Failed to initialize SDL: "<<SDL_GetError()<<std::endl;
         return -1;
     }
+
     if (SDL_CreateWindowAndRenderer(CANVAS_WIDTH, CANVAS_HEIGHT,
-                                    SDL_WINDOW_SHOWN | SDL_WINDOW_INPUT_FOCUS, &window, &renderer)){
+                                    SDL_WINDOW_SHOWN | SDL_WINDOW_INPUT_FOCUS, &window, &renderer) != 0){
         std::cerr<<"Failed to create window and renderer: "<<SDL_GetError()<<std::endl;
         return -1;                               
     }
