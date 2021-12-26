@@ -22,6 +22,14 @@
 #define RECT_WIDTH      ((CANVAS_WIDTH/2) / MAP_WIDTH)
 #define RECT_HEIGHT     (CANVAS_HEIGHT / MAP_HEIGHT)
 
+bool sortSpritesByDistance(std::vector<Sprite>& sprites, Player& player){
+    for (size_t i = 0; i < sprites.size(); i++){
+        updateSpriteDistanceToPlayer(sprites[i], player);
+    }
+    std::sort(sprites.begin(), sprites.end(), compareSpriteDistance);
+    return true;
+}
+
 bool renderWorldSprite(Canvas& canvas, 
                        Sprite& sprite, 
                        Texture& texture, 
@@ -118,11 +126,7 @@ bool renderWorld(Canvas& canvas,
     }
 
     // Sort sprites by distance first and then render them
-    for (size_t i = 0; i < sprites.size(); i++){
-        sprites[i].distToPlayer = std::sqrt(pow(player.x - sprites[i].x, 2) + pow(player.y - sprites[i].y, 2));
-    }
-    std::sort(sprites.begin(), sprites.end(), compareSpriteDistance);
-
+    assert(sortSpritesByDistance(sprites, player));
     for (size_t i = 0; i < sprites.size(); i++){
         assert(renderWorldSprite(canvas, sprites[i], spriteTextures, player, distBuffer));
     }
