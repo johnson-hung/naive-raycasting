@@ -21,9 +21,9 @@
 
 // FONT & TEXTFIELD (Field that holds the text)
 #define FONT_FILE           "./fonts/font_alagard.ttf"
-#define FONT_SIZE           30
-#define TEXTFIELD_X         HUD_SHIFT_X + MAP_DISPLAY_WIDTH
-#define TEXTFIELD_Y         HUD_SHIFT_Y
+#define FONT_SIZE           24
+#define TEXTFIELD_X         HUD_SHIFT_X + MAP_DISPLAY_WIDTH + 5
+#define TEXTFIELD_Y         HUD_SHIFT_Y + 5
 
 // MAP: The area that holds the top-down view of current game state
 #define MAP                 "0111111111111111"\
