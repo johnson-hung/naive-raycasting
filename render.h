@@ -37,7 +37,7 @@ bool renderWorldSprite(Canvas& canvas,
     while (spriteDir - player.rot < -PI) spriteDir += 2*PI;
 
     // Calculate distance between the player and the sprite, then get displayed sprite size
-    size_t spriteSize = std::min(1000, static_cast<int>(CANVAS_HEIGHT/sprite.distToPlayer));
+    size_t spriteSize = std::min(1000, static_cast<int>(MAIN_HEIGHT/sprite.distToPlayer));
 
     // Calculate (x, y) position to start rendering
     int startX = (spriteDir-player.rot)/player.fov * MAIN_WIDTH + MAIN_WIDTH/2 - texture.getSize()/2;
