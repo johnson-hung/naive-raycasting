@@ -23,15 +23,21 @@ GameStates currentState = STATE_WAITING;
 
 
 void stateWaiting(SDL_Event& event, std::string& msg, bool& msgFlag){
-    if (SDL_PollEvent(&event) && event.type == SDL_KEYDOWN && event.key.keysym.sym == 'e'){
-        std::cout<<"[Game] Change state: Waiting -> Running"<<std::endl;
-        msg =  "W - Go Forward     ";
-        msg += "S - Go Backward    ";
-        msg += "A - Turn Left      ";
-        msg += "D - Turn Right     ";
-        msg += "Esc - Exit Game    ";
-        msgFlag = true;
-        currentState = STATE_RUNNING;
+    if (SDL_PollEvent(&event)){
+        if (event.type == SDL_QUIT){
+            currentState = STATE_TERMINATE;
+            return;
+        }
+        if (event.type == SDL_KEYDOWN && event.key.keysym.sym == 'e'){
+            std::cout<<"[Game] Change state: Waiting -> Running"<<std::endl;
+            msg =  "W - Go Forward     ";
+            msg += "S - Go Backward    ";
+            msg += "A - Turn Left      ";
+            msg += "D - Turn Right     ";
+            msg += "Esc - Exit Game    ";
+            msgFlag = true;
+            currentState = STATE_RUNNING;
+        }
     }
 }
 
