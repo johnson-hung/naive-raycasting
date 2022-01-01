@@ -81,7 +81,6 @@ bool renderWorld(Canvas& canvas,
 
     for(size_t i = 0; i < MAIN_WIDTH; i++){
         float rotation = player.rot - player.fov / 2 + player.fov * (i/(float)MAIN_WIDTH);
-        uint32_t color = packColor(255, 0, 0);
         
         // Cast single ray in certain direction
         for (float dist = 0; dist < 23; dist += 0.01){
@@ -145,7 +144,6 @@ bool renderMapSprites(Canvas& canvas, std::vector<Sprite>& sprites){
 bool renderMap(Canvas& canvas, Map& map, Texture& textures){
     // Scale the top-down map to window size and display it
     const size_t textureCount = textures.getCount();
-    const size_t textureSize = textures.getSize();
 
     // Draw the top-down map
     for (size_t x = 0; x < MAP_WIDTH; x++){
