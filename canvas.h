@@ -11,6 +11,7 @@ class Canvas{
         std::vector<uint32_t> img; // Current image
 
     public:
+        Canvas(){};
         Canvas(const size_t width, const size_t height, const uint32_t color);
 
         // Clean up canvas with given color

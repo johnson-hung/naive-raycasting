@@ -12,6 +12,7 @@ class Player{
         int walk = 0; // 0 -> stop; 1 -> forward; -1 -> backward
         int turn = 0; // 0 -> stop; 1 -> rightward; -1 -> leftward
 
+        Player(){};
         Player(float pX, float pY, float pRot, float pFov);
 
         void printPlayerPosition();
