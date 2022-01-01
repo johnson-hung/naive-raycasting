@@ -89,8 +89,11 @@ void stateTerminate(bool& terminateFlag){
 }
 
 int main() {
+    // Initialize the game
     Game game;
-    game.init(
+    game.sdlInit();
+    game.ttfInit("Press 'E' to start...");
+    game.gameInit(
         Canvas(CANVAS_WIDTH, CANVAS_HEIGHT, 0),                             // Window (canvas) properties
         Map(),                                                              // Top-down map
         Player(PLAYER_DEFAULT_X, PLAYER_DEFAULT_Y, 0, PLAYER_DEFAULT_FOV),  //
@@ -105,44 +108,7 @@ int main() {
         }
     );
 
-    SDL_Window* window = nullptr;
-    SDL_Renderer* renderer = nullptr;
-    TTF_Font* font = nullptr;
-
-    if (SDL_Init(SDL_INIT_VIDEO) != 0){
-        std::cerr<<"Failed to initialize SDL: "<<SDL_GetError()<<std::endl;
-        return -1;
-    }
-
-    if (SDL_CreateWindowAndRenderer(CANVAS_WIDTH, CANVAS_HEIGHT,
-                                    SDL_WINDOW_SHOWN | SDL_WINDOW_INPUT_FOCUS, &window, &renderer) != 0){
-        std::cerr<<"Failed to create window and renderer: "<<SDL_GetError()<<std::endl;
-        return -1;                               
-    }
-    SDL_Texture* canvasTexture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888,
-                                 SDL_TEXTUREACCESS_STREAMING, CANVAS_WIDTH, CANVAS_HEIGHT);
-
-
-    if (TTF_Init() != 0){
-        std::cerr<<"Failed to create initialize SDL_ttf: "<<TTF_GetError()<<std::endl;
-        return -1;
-    }
-    font = TTF_OpenFont(FONT_FILE, FONT_SIZE);
-    if (!font){
-        std::cerr<<"Failed to load font: "<<TTF_GetError()<<std::endl;
-        return -1;
-    }
-    std::string text = "Press 'E' to start...";
-    SDL_Color textColor = {255, 255, 255};
-    SDL_Surface* textSurface = TTF_RenderText_Solid(font, text.c_str(), textColor);
-    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-    SDL_Rect textRect;
-    textRect.x = TEXTFIELD_X;
-    textRect.y = TEXTFIELD_Y;
-    textRect.w = textSurface->w;
-    textRect.h = textSurface->h;
-
-
+    // State handling (temp)
     bool isTerminated = false;
     bool isTextUpdated = false;
     auto startTime = std::chrono::high_resolution_clock::now();
@@ -159,10 +125,10 @@ int main() {
         startTime = currentTime;
 
         // Using this approach to switch game states is not the best way,
-        // but it's okay for a small project like this... right?
+        // but it's okay for a small project like this... right? nope.
         switch (currentState){
             case STATE_WAITING:
-                stateWaiting(event, text, isTextUpdated);
+                stateWaiting(event, game.curText, isTextUpdated);
                 break;
             
             case STATE_RUNNING:
@@ -174,34 +140,17 @@ int main() {
                 stateTerminate(isTerminated);
                 break;
         }
-
         // Update current world and objects data
         render(game.canvas, game.map, game.wallTextures, game.monsterTextures, game.player, game.monsters);
 
-        // Update text surface before rendering
-        if (isTextUpdated){
-            textSurface = TTF_RenderText_Blended_Wrapped(font, text.c_str(), textColor, textRect.w);
-            textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
-            textRect.w = textSurface->w;
-            textRect.h = textSurface->h;
-            isTextUpdated = false;
-        }
-
-        // Copy canvas and text data to the screen
-        SDL_UpdateTexture(canvasTexture, NULL, reinterpret_cast<void*>(game.canvas.getImage().data()), CANVAS_WIDTH*4);
-        SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, canvasTexture, NULL, NULL);
-        SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
-        SDL_RenderPresent(renderer);
+        // Update content and display
+        game.ttfUpdate();
+        game.sdlUpdate();
+        game.render();
     }
-
     // Clean up
-    SDL_FreeSurface(textSurface);
-    SDL_DestroyTexture(canvasTexture);
-    SDL_DestroyTexture(textTexture);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-
+    game.ttfCleanup();
+    game.sdlCleanup();
     SDL_Quit();
 
     return 0;
