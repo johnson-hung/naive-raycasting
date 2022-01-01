@@ -88,6 +88,18 @@ void stateTerminate(bool& terminateFlag){
     terminateFlag = true;
 }
 
+bool isCurrentWorld(std::chrono::steady_clock::time_point& startTime){
+    // Sleep if the current duration is less than WORLD_UPDATE_TIME [ms] since last rendering
+    auto currentTime = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> duration = currentTime - startTime; // [ms]
+    if (duration.count() < WORLD_UPDATE_PERIOD){
+        std::this_thread::sleep_for(std::chrono::milliseconds(3));
+        return true;
+    }
+    startTime = currentTime;
+    return false;
+}
+
 int main() {
     // Initialize the game
     Game game;
@@ -114,18 +126,11 @@ int main() {
     auto startTime = std::chrono::high_resolution_clock::now();
     std::cout<<"[Game] State: Waiting"<<std::endl;
     while (!isTerminated){
-        SDL_Event event;
-        // Sleep if the current duration is less than 20 [ms] since last rendering
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double, std::milli> duration = currentTime - startTime; // [ms]
-        if (duration.count() < 20){
-            std::this_thread::sleep_for(std::chrono::milliseconds(3));
-            continue;
-        }
-        startTime = currentTime;
+        if (isCurrentWorld(startTime)) continue;
 
         // Using this approach to switch game states is not the best way,
         // but it's okay for a small project like this... right? nope.
+        SDL_Event event;
         switch (currentState){
             case STATE_WAITING:
                 stateWaiting(event, game.curText, isTextUpdated);

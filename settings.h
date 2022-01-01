@@ -4,6 +4,9 @@
 // Constant
 #define PI                  3.14159265
 
+// WORLD_UPDATE_PERIOD: Period of time [ms] for the next world update
+#define WORLD_UPDATE_PERIOD 20
+
 // CANVAS: The actual window size
 #define CANVAS_WIDTH        512
 #define CANVAS_HEIGHT       640
