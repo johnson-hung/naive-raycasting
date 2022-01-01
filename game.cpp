@@ -4,13 +4,9 @@
 #include <thread>
 #include <string>
 #include "utils.h"
-#include "canvas.h"
-#include "map.h"
-#include "texture.h"
-#include "player.h"
-#include "sprite.h"
 #include "render.h"
 #include "settings.h"
+#include "game.h"
 #include "SDL.h"
 #include "SDL_ttf.h"
 
@@ -20,7 +16,6 @@ enum GameStates{
     STATE_TERMINATE,
 };
 GameStates currentState = STATE_WAITING;
-
 
 void stateWaiting(SDL_Event& event, std::string& msg, bool& msgFlag){
     if (SDL_PollEvent(&event)){
@@ -94,32 +89,21 @@ void stateTerminate(bool& terminateFlag){
 }
 
 int main() {
-    // Window (canvas) properties
-    Canvas canvas(CANVAS_WIDTH, CANVAS_HEIGHT, 0); // Initialize the canvas
-
-    // Initialize the map and get properties
-    Map map;
-
-    // Initialize the player
-    Player player(PLAYER_DEFAULT_X, PLAYER_DEFAULT_Y, 0, PLAYER_DEFAULT_FOV);
-    player.printPlayerPosition();
-    
-    // Initialize the wall textures
-    Texture wallTextures(TEXTURE_FILE_WALL, SDL_PIXELFORMAT_ABGR8888);
-    Texture monsterTextures(TEXTURE_FILE_MONS, SDL_PIXELFORMAT_ABGR8888);
-    if (wallTextures.isEmpty() || monsterTextures.isEmpty()){
-        std::cerr << "Failed to load wall textures" << std::endl;
-        return -1;
-    }
-
-    // Initialize monster sprites
-    size_t numMonsters = 5;
-    std::vector<Sprite> monsters(numMonsters);
-    monsters[0] = (struct Sprite){6.4, 6.2, 2, 0};
-    monsters[1] = (struct Sprite){4.5, 4.5, 3, 0};
-    monsters[2] = (struct Sprite){8.0, 8.0, 2, 0};
-    monsters[3] = (struct Sprite){14.0, 14.2, 0, 0};
-    monsters[4] = (struct Sprite){12.8, 6.0, 1, 0};
+    Game game;
+    game.init(
+        Canvas(CANVAS_WIDTH, CANVAS_HEIGHT, 0),                             // Window (canvas) properties
+        Map(),                                                              // Top-down map
+        Player(PLAYER_DEFAULT_X, PLAYER_DEFAULT_Y, 0, PLAYER_DEFAULT_FOV),  //
+        Texture(TEXTURE_FILE_WALL, SDL_PIXELFORMAT_ABGR8888),               // Textures of walls
+        Texture(TEXTURE_FILE_MONS, SDL_PIXELFORMAT_ABGR8888),               // Textures of monsters
+        std::vector<Sprite>{                                                // Sprites of monsters
+            (struct Sprite){6.4, 6.2, 2, 0},
+            (struct Sprite){4.5, 4.5, 3, 0},
+            (struct Sprite){8.0, 8.0, 2, 0},
+            (struct Sprite){14.0, 14.2, 0, 0},
+            (struct Sprite){12.8, 6.0, 1, 0}
+        }
+    );
 
     SDL_Window* window = nullptr;
     SDL_Renderer* renderer = nullptr;
@@ -183,7 +167,7 @@ int main() {
             
             case STATE_RUNNING:
                 // Check and response to user inputs
-                stateRunning(event, map, player);
+                stateRunning(event, game.map, game.player);
                 break;
             
             case STATE_TERMINATE:
@@ -192,7 +176,7 @@ int main() {
         }
 
         // Update current world and objects data
-        render(canvas, map, wallTextures, monsterTextures, player, monsters);
+        render(game.canvas, game.map, game.wallTextures, game.monsterTextures, game.player, game.monsters);
 
         // Update text surface before rendering
         if (isTextUpdated){
@@ -204,7 +188,7 @@ int main() {
         }
 
         // Copy canvas and text data to the screen
-        SDL_UpdateTexture(canvasTexture, NULL, reinterpret_cast<void*>(canvas.getImage().data()), CANVAS_WIDTH*4);
+        SDL_UpdateTexture(canvasTexture, NULL, reinterpret_cast<void*>(game.canvas.getImage().data()), CANVAS_WIDTH*4);
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, canvasTexture, NULL, NULL);
         SDL_RenderCopy(renderer, textTexture, NULL, &textRect);

@@ -1,5 +1,5 @@
 PROGRAM = game
-CXXFLAGS += -std=c++11 
+CXXFLAGS += -std=c++17 -Wall -Werror -g
 INCLUDES = -I/opt/homebrew/include/SDL2 -D_THREAD_SAFE
 LINKS = -L/opt/homebrew/lib
 LINK_FLAGS = -lSDL2 -lSDL2_ttf
@@ -24,11 +24,14 @@ clean:
 
 #================
 SRC_FILES = game.cpp utils.cpp canvas.cpp map.cpp texture.cpp player.cpp
-OBJ_FILES = utils.o canvas.o map.o texture.o player.o
+OBJ_FILES = game.o utils.o canvas.o map.o texture.o player.o
 #================
 
 $(PROGRAM): directory $(OBJ_FILES)
-	g++ $(CXXFLAGS) -o ${OUT_DIR}$(PROGRAM) ${addprefix $(OUT_DIR), $(OBJ_FILES)} $(INCLUDES) game.cpp $(LINKS) $(LINK_FLAGS)
+	g++ -o ${OUT_DIR}$(PROGRAM) ${addprefix $(OUT_DIR), $(OBJ_FILES)} $(LINKS) $(LINK_FLAGS)
+
+game.o: game.cpp game.h
+	g++ $(CXXFLAGS) -c -o ${OUT_DIR}game.o $(INCLUDES) game.cpp
 
 utils.o: utils.cpp utils.h
 	g++ $(CXXFLAGS) -c -o ${OUT_DIR}utils.o utils.cpp
