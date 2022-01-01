@@ -3,89 +3,41 @@
 #include <cmath>
 #include <thread>
 #include <string>
-#include "utils.h"
-#include "render.h"
-#include "settings.h"
 #include "game.h"
-#include "SDL.h"
-#include "SDL_ttf.h"
+#include "state_waiting.h"
 
-enum GameStates{
-    STATE_WAITING,
-    STATE_RUNNING,
-    STATE_TERMINATE,
-};
-GameStates currentState = STATE_WAITING;
+static StateWaiting* i_StateWaiting =  StateWaiting::getInstance();
 
-void stateWaiting(SDL_Event& event, std::string& msg, bool& msgFlag){
-    if (SDL_PollEvent(&event)){
-        if (event.type == SDL_QUIT){
-            currentState = STATE_TERMINATE;
-            return;
-        }
-        if (event.type == SDL_KEYDOWN && event.key.keysym.sym == 'e'){
-            std::cout<<"[Game] Change state: Waiting -> Running"<<std::endl;
-            msg =  "W - Go Forward     ";
-            msg += "S - Go Backward    ";
-            msg += "A - Turn Left      ";
-            msg += "D - Turn Right     ";
-            msg += "Esc - Exit Game    ";
-            msgFlag = true;
-            currentState = STATE_RUNNING;
-        }
-    }
+Game::Game(){
+    std::cout<<"Game instance created"<<std::endl;
 }
 
-void stateRunning(SDL_Event& event, Map& map, Player& player){
-    // Check user inputs
-    if (SDL_PollEvent(&event)){
-        if (event.type == SDL_QUIT || (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)){            
-            std::cout<<"[Game] Change state: Running -> Terminate"<<std::endl;
-            currentState = STATE_TERMINATE;
-            return;
-        }
-        if (event.type == SDL_KEYUP){
-            if (event.key.keysym.sym == 'w' || event.key.keysym.sym == 's') player.walk = 0;
-            if (event.key.keysym.sym == 'a' || event.key.keysym.sym == 'd') player.turn = 0;
-        }
-        if (event.type == SDL_KEYDOWN){
-            if (event.key.keysym.sym == 'w') player.walk = 1;
-            if (event.key.keysym.sym == 's') player.walk = -1;
-
-            if (event.key.keysym.sym == 'a') player.turn = -1;
-            if (event.key.keysym.sym == 'd') player.turn = 1;
-        }
+void Game::gameInit(const Canvas& _canvas,
+                    const Map& _map,
+                    const Player& _player,
+                    const Texture& _wallTextures,
+                    const Texture& _monsterTextures,
+                    const std::vector<Sprite>& _monsters){
+    canvas = _canvas;
+    map = _map;
+    player = _player;
+    player.printPlayerPosition();
+    wallTextures = _wallTextures;
+    monsterTextures = _monsterTextures;
+    if (wallTextures.isEmpty() || monsterTextures.isEmpty()){
+        std::cerr << "Failed to load wall textures" << std::endl;
+        isRunning = false;
     }
-
-    // Update player position and rotation
-    float factor = 0.05;
-    player.rot += float(player.turn) * factor;
-    float diffX = player.walk * cos(player.rot) * factor;
-    float diffY = player.walk * sin(player.rot) * factor;
-    float nextX = player.x + diffX;
-    float nextY = player.y + diffY;
-
-    if ((int) nextX >= 0 && (int) nextX < MAP_WIDTH && (int) nextY >= 0 && (int) nextY < MAP_HEIGHT){
-        // Check if there is a block in the next position
-        bool posUpdated = false;
-        float tol = 0.15;
-        float offsetX = diffX >= 0? nextX + tol : nextX - tol;
-        float offsetY = diffY >= 0? nextY + tol : nextY - tol;
-        if (map.isEmptyAt(offsetX, player.y)){
-            player.x = nextX;
-            posUpdated = true;
-        }
-        if (map.isEmptyAt(player.x, offsetY)){
-            player.y = nextY;
-            posUpdated = true;
-        }
-        if (posUpdated && (abs(diffX) > 0.01 || abs(diffY) > 0.01)) player.printPlayerPosition();
-    }
+    monsters = _monsters;
+    isRunning = true;
+    std::cout<<"World initialized"<<std::endl;
 }
 
-void stateTerminate(bool& terminateFlag){
-    std::cout<<"[Game] Terminating..."<<std::endl;
-    terminateFlag = true;
+void Game::gameUpdate(){
+    state->handleEvents(this);
+    state->update(this);
+    state->render(this);
+    render(canvas, map, wallTextures, monsterTextures, player, monsters);
 }
 
 bool isCurrentWorld(std::chrono::steady_clock::time_point& startTime){
@@ -119,39 +71,20 @@ int main() {
             (struct Sprite){12.8, 6.0, 1, 0}
         }
     );
+    game.changeState(StateWaiting::getInstance());
 
     // State handling (temp)
-    bool isTerminated = false;
-    bool isTextUpdated = false;
     auto startTime = std::chrono::high_resolution_clock::now();
     std::cout<<"[Game] State: Waiting"<<std::endl;
-    while (!isTerminated){
+    while (game.running()){
         if (isCurrentWorld(startTime)) continue;
-
-        // Using this approach to switch game states is not the best way,
-        // but it's okay for a small project like this... right? nope.
-        SDL_Event event;
-        switch (currentState){
-            case STATE_WAITING:
-                stateWaiting(event, game.curText, isTextUpdated);
-                break;
-            
-            case STATE_RUNNING:
-                // Check and response to user inputs
-                stateRunning(event, game.map, game.player);
-                break;
-            
-            case STATE_TERMINATE:
-                stateTerminate(isTerminated);
-                break;
-        }
         // Update current world and objects data
-        render(game.canvas, game.map, game.wallTextures, game.monsterTextures, game.player, game.monsters);
+        game.gameUpdate();
 
         // Update content and display
         game.ttfUpdate();
         game.sdlUpdate();
-        game.render();
+        game.sdlRender();
     }
     // Clean up
     game.ttfCleanup();

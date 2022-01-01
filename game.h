@@ -1,8 +1,13 @@
 #ifndef GAME_H
 #define GAME_H
 
+#include <memory>
 #include <vector>
 #include <iostream>
+#include "utils.h"
+#include "render.h"
+#include "settings.h"
+#include "render.h"
 #include "canvas.h"
 #include "map.h"
 #include "texture.h"
@@ -16,8 +21,8 @@ class GameState;
 class Game{
     private:
         // Game status
-        std::vector<GameState*> states;
-        bool isRunning;
+        GameState* state            = nullptr;
+        bool isRunning              = false;
 
     public:
         // Basic elements for running the game
@@ -42,32 +47,16 @@ class Game{
         SDL_Texture* textTexture    = nullptr;
         SDL_Surface* textSurface    = nullptr;
 
-        Game(){
-            std::cout<<"Game instance created"<<std::endl;
-        }
+        Game();
 
         void gameInit(const Canvas& _canvas,
-                  const Map& _map,
-                  const Player& _player,
-                  const Texture& _wallTextures,
-                  const Texture& _monsterTextures,
-                  const std::vector<Sprite>& _monsters){
-            canvas = _canvas;
-            map = _map;
-            player = _player;
-            player.printPlayerPosition();
-            wallTextures = _wallTextures;
-            monsterTextures = _monsterTextures;
-            if (wallTextures.isEmpty() || monsterTextures.isEmpty()){
-                std::cerr << "Failed to load wall textures" << std::endl;
-                isRunning = false;
-            }
-            monsters = _monsters;
+                      const Map& _map,
+                      const Player& _player,
+                      const Texture& _wallTextures,
+                      const Texture& _monsterTextures,
+                      const std::vector<Sprite>& _monsters);
 
-            isRunning = true;
-            std::cout<<"World initialized"<<std::endl;
-        }
-
+        void gameUpdate();
 
         void sdlInit(){
             if (SDL_Init(SDL_INIT_VIDEO) != 0){
@@ -143,22 +132,15 @@ class Game{
             std::cout<<"SDL_TTF cleaned"<<std::endl;
         }
 
+        void sdlRender(){ SDL_RenderPresent(renderer); }
 
-        void render(){ SDL_RenderPresent(renderer); }
-        void changeState(GameState* state){}
+        void changeState(GameState* newState){
+            std::cout<<"Game state changed"<<std::endl;
+            state = newState;
+        }
+
         bool running(){ return isRunning; }
         void terminate(){ isRunning = false; }
-};
-
-class GameState{
-    public:
-        virtual void handleEvents(Game* game) = 0;
-        virtual void update(Game* game) = 0;
-        virtual void render(Game* game) = 0;
-        void changeState(Game* game, GameState* state){
-            game->changeState(state);
-        }
-        virtual ~GameState(){};
 };
 
 #endif
