@@ -82,8 +82,8 @@ int main() {
         game.gameUpdate();
 
         // Update content and display
-        game.ttfUpdate();
         game.sdlUpdate();
+        game.ttfUpdate();
         game.sdlRender();
     }
     // Clean up

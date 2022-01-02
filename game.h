@@ -80,7 +80,6 @@ class Game{
             SDL_UpdateTexture(canvasTexture, NULL, reinterpret_cast<void*>(canvas.getImage().data()), CANVAS_WIDTH*4);
             SDL_RenderClear(renderer);
             SDL_RenderCopy(renderer, canvasTexture, NULL, NULL);
-            SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
         }
         
         void sdlCleanup(){
