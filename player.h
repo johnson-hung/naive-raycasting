@@ -9,10 +9,10 @@ class Player{
         float y;
         float rot; // Rotation
         float fov; // Field of View
-        int walk = 0; // 0 -> stop; 1 -> forward; -1 -> backward
-        int turn = 0; // 0 -> stop; 1 -> rightward; -1 -> leftward
+        int walk; // 0 -> stop; 1 -> forward; -1 -> backward
+        int turn; // 0 -> stop; 1 -> rightward; -1 -> leftward
 
-        Player(){};
+        Player();
         Player(float pX, float pY, float pRot, float pFov);
 
         void printPlayerPosition();

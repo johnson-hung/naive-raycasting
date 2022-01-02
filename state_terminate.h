@@ -11,18 +11,13 @@ class StateTerminate: public GameState{
         StateTerminate(){}
 
     public:
-        void handleEvents(Game* game){}
-        void update(Game* game){
-            std::cout<<"[Game] Terminating..."<<std::endl;
-            game->terminate();
-        }
-        void render(Game* game){}
+        void handleEvents(Game* game);
+        void update(Game* game);
+        void render(Game* game);
 
-        static StateTerminate* getInstance(){ return &i_StateTerminate; }
+        static StateTerminate* getInstance();
 
         ~StateTerminate(){}
 };
-
-StateTerminate StateTerminate::i_StateTerminate;
 
 #endif
