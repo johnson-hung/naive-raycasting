@@ -3,6 +3,7 @@
 #include <cstdint> // Fixed width integer types 
 #include <cassert> // Error handling
 #include <cmath>
+#include <vector>
 #include <algorithm>
 #include "settings.h"
 #include "utils.h"
@@ -17,52 +18,7 @@ bool Render::sortSpritesByDistance(std::vector<Sprite>& sprites, Player& player)
     return true;
 }
 
-bool Render::renderWorldSprite(Canvas& canvas, 
-                               Sprite& sprite, 
-                               Texture& texture, 
-                               Player& player, 
-                               std::vector<float>& buf){ // Depth buffer
-    // View player as center, get direction of the sprite 
-    float spriteDir = atan2(sprite.y - player.y, sprite.x - player.x);
-
-    // Recalculate spriteDir to let it be in range [-PI, PI]
-    while (spriteDir - player.rot > PI) spriteDir -= 2*PI;
-    while (spriteDir - player.rot < -PI) spriteDir += 2*PI;
-
-    // Calculate distance between the player and the sprite, then get displayed sprite size
-    size_t spriteSize = std::min(1000, static_cast<int>(MAIN_HEIGHT/sprite.distToPlayer));
-
-    // Calculate (x, y) position to start rendering
-    int startX = (spriteDir-player.rot)/player.fov * MAIN_WIDTH + MAIN_WIDTH/2 - texture.getSize()/2;
-    int startY = MAIN_HEIGHT/2 - spriteSize/2;
-    for (size_t i = 0; i < spriteSize; i++){
-        if (startX + (int)i < 0 || startX + (int)i >= MAIN_WIDTH) continue;
-        if (buf[startX + i] < sprite.distToPlayer) continue; // Current column is blocked
-        for (size_t j = 0; j < spriteSize; j++){
-            if (startY + (int)j < 0 || startY + (int)j >= MAIN_HEIGHT) continue;
-            float scale = (float) texture.getSize() / spriteSize;
-            uint32_t color = texture.getValueAt(sprite.textureIdx, i * scale, j * scale);
-            uint8_t r;
-            uint8_t g;
-            uint8_t b;
-            uint8_t a;
-            unpackColor(color, r, g, b, a);
-            if (a == 255){
-                canvas.drawPixel(startX + i, startY + j, color);
-            }
-        }
-    }
-    return true;
-}
-
-// Cast field of view on the top-down map and 3D view
-bool Render::renderWorld(Canvas& canvas,
-                         Map& map,
-                         Texture& textures,
-                         Texture& spriteTextures,
-                         Player& player,
-                         std::vector<Sprite>& sprites){
-
+std::vector<float> Render::renderWorldEnvironment(Canvas& canvas, Map& map, Texture& textures, Player& player){
     canvas.drawRectangle(0, 0, MAIN_WIDTH, MAIN_HEIGHT/2, packColor(40, 40, 40)); // Ceiling
     canvas.drawRectangle(0, MAIN_HEIGHT/2, MAIN_WIDTH, MAIN_HEIGHT/2, packColor(20, 20, 20)); // Floor
     
@@ -110,16 +66,75 @@ bool Render::renderWorld(Canvas& canvas,
             }
         }
     }
+    return distBuffer;
+}
 
-    // Sort sprites by distance first and then render them
-    assert(sortSpritesByDistance(sprites, player));
-    for (size_t i = 0; i < sprites.size(); i++){
-        assert(renderWorldSprite(canvas, sprites[i], spriteTextures, player, distBuffer));
+bool Render::renderWorldSprite(Canvas& canvas, 
+                               Sprite& sprite, 
+                               Texture& texture, 
+                               Player& player, 
+                               std::vector<float>& buf){ // Depth buffer
+    // View player as center, get direction of the sprite 
+    float spriteDir = atan2(sprite.y - player.y, sprite.x - player.x);
+
+    // Recalculate spriteDir to let it be in range [-PI, PI]
+    while (spriteDir - player.rot > PI) spriteDir -= 2*PI;
+    while (spriteDir - player.rot < -PI) spriteDir += 2*PI;
+
+    // Calculate distance between the player and the sprite, then get displayed sprite size
+    size_t spriteSize = std::min(1000, static_cast<int>(MAIN_HEIGHT/sprite.distToPlayer));
+
+    // Calculate (x, y) position to start rendering
+    int startX = (spriteDir-player.rot)/player.fov * MAIN_WIDTH + MAIN_WIDTH/2 - texture.getSize()/2;
+    int startY = MAIN_HEIGHT/2 - spriteSize/2;
+    for (size_t i = 0; i < spriteSize; i++){
+        if (startX + (int)i < 0 || startX + (int)i >= MAIN_WIDTH) continue;
+        if (buf[startX + i] < sprite.distToPlayer) continue; // Current column is blocked
+        for (size_t j = 0; j < spriteSize; j++){
+            if (startY + (int)j < 0 || startY + (int)j >= MAIN_HEIGHT) continue;
+            float scale = (float) texture.getSize() / spriteSize;
+            uint32_t color = texture.getValueAt(sprite.textureIdx, i * scale, j * scale);
+            uint8_t r;
+            uint8_t g;
+            uint8_t b;
+            uint8_t a;
+            unpackColor(color, r, g, b, a);
+            if (a == 255){
+                canvas.drawPixel(startX + i, startY + j, color);
+            }
+        }
     }
     return true;
 }
 
+bool Render::renderWorldSprites(Canvas& canvas,
+                                Player& player,
+                                std::vector<Sprite>& sprites,
+                                Texture& spriteTextures,
+                                std::vector<float> distBuffer){
+    // Sort sprites by distance first and then render them
+    assert(sortSpritesByDistance(sprites, player));
+    for (size_t i = 0; i < sprites.size(); i++){
+        assert(renderWorldSprite(canvas, sprites[i], spriteTextures, player, distBuffer));
+    } 
+    return true;
+}
+
+// Cast field of view on the top-down map and 3D view
+bool Render::renderWorld(Canvas& canvas,
+                         Map& map,
+                         Texture& textures,
+                         Texture& spriteTextures,
+                         Player& player,
+                         std::vector<Sprite>& sprites){
+    std::vector<float> distBuffer = renderWorldEnvironment(canvas, map, textures, player);
+    renderWorldSprites(canvas, player, sprites, spriteTextures, distBuffer);
+    return true;
+}
+
 bool Render::renderMapPlayer(Canvas& canvas, Player& player){
+    if (!MAP_DISPLAY) return true;
+
     // Draw player on the top-down map
     canvas.drawRectangle(HUD_SHIFT_X + player.x * MAP_RECT_WIDTH,
                          HUD_SHIFT_Y + player.y * MAP_RECT_HEIGHT,5, 5, packColor(0, 255, 0));
@@ -127,6 +142,8 @@ bool Render::renderMapPlayer(Canvas& canvas, Player& player){
 }
 
 bool Render::renderMapSprites(Canvas& canvas, std::vector<Sprite>& sprites){
+    if (!MAP_DISPLAY) return true;
+
     for (size_t i = 0; i < sprites.size(); i++){
         canvas.drawRectangle(HUD_SHIFT_X + sprites[i].x * MAP_RECT_WIDTH,
                              HUD_SHIFT_Y + sprites[i].y * MAP_RECT_HEIGHT, 5, 5, packColor(255, 0, 0));
@@ -134,7 +151,9 @@ bool Render::renderMapSprites(Canvas& canvas, std::vector<Sprite>& sprites){
     return true;
 }
 
-bool Render::renderMap(Canvas& canvas, Map& map, Texture& textures){
+bool Render::renderMapEnvironment(Canvas& canvas, Map& map, Texture& textures){
+    if (!MAP_DISPLAY) return true;
+
     // Scale the top-down map to window size and display it
     const size_t textureCount = textures.getCount();
 
@@ -157,7 +176,18 @@ bool Render::renderMap(Canvas& canvas, Map& map, Texture& textures){
     return true;
 }
 
+bool Render::renderMap(Canvas& canvas, Map& map, Texture& textures, Player& player, std::vector<Sprite>& sprites){
+    if (!MAP_DISPLAY) return true;
+
+    assert(renderMapEnvironment(canvas, map, textures));
+    assert(renderMapPlayer(canvas, player));
+    assert(renderMapSprites(canvas, sprites));
+    return true;
+}
+
 bool Render::renderHUDPlaceholder(Canvas& canvas){
+    if (!HUD_DISPLAY) return true;
+
     canvas.drawRectangle(HUD_SHIFT_X, HUD_SHIFT_Y, HUD_WIDTH, HUD_HEIGHT, packColor(50, 50, 50));
     return true;
 }
@@ -171,14 +201,6 @@ void Render::render(Canvas& canvas,
     canvas.clearCanvas(packColor(255, 255, 255));
 
     assert(renderWorld(canvas, map, textures, spriteTextures, player, sprites));
-
-    if (HUD_DISPLAY){
-        assert(renderHUDPlaceholder(canvas));
-    }
-
-    if (MAP_DISPLAY){
-        assert(renderMap(canvas, map, textures));
-        assert(renderMapPlayer(canvas, player));
-        assert(renderMapSprites(canvas, sprites));
-    }
+    assert(renderHUDPlaceholder(canvas));
+    assert(renderMap(canvas, map, textures, player, sprites));
 }
