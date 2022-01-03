@@ -9,7 +9,7 @@
 #include "render.h"
 
 
-bool sortSpritesByDistance(std::vector<Sprite>& sprites, Player& player){
+bool Render::sortSpritesByDistance(std::vector<Sprite>& sprites, Player& player){
     for (size_t i = 0; i < sprites.size(); i++){
         updateSpriteDistanceToPlayer(sprites[i], player);
     }
@@ -17,11 +17,11 @@ bool sortSpritesByDistance(std::vector<Sprite>& sprites, Player& player){
     return true;
 }
 
-bool renderWorldSprite(Canvas& canvas, 
-                       Sprite& sprite, 
-                       Texture& texture, 
-                       Player& player, 
-                       std::vector<float>& buf){ // Depth buffer
+bool Render::renderWorldSprite(Canvas& canvas, 
+                               Sprite& sprite, 
+                               Texture& texture, 
+                               Player& player, 
+                               std::vector<float>& buf){ // Depth buffer
     // View player as center, get direction of the sprite 
     float spriteDir = atan2(sprite.y - player.y, sprite.x - player.x);
 
@@ -56,12 +56,12 @@ bool renderWorldSprite(Canvas& canvas,
 }
 
 // Cast field of view on the top-down map and 3D view
-bool renderWorld(Canvas& canvas,
-                 Map& map,
-                 Texture& textures,
-                 Texture& spriteTextures,
-                 Player& player,
-                 std::vector<Sprite>& sprites){
+bool Render::renderWorld(Canvas& canvas,
+                         Map& map,
+                         Texture& textures,
+                         Texture& spriteTextures,
+                         Player& player,
+                         std::vector<Sprite>& sprites){
 
     canvas.drawRectangle(0, 0, MAIN_WIDTH, MAIN_HEIGHT/2, packColor(40, 40, 40)); // Ceiling
     canvas.drawRectangle(0, MAIN_HEIGHT/2, MAIN_WIDTH, MAIN_HEIGHT/2, packColor(20, 20, 20)); // Floor
@@ -119,14 +119,14 @@ bool renderWorld(Canvas& canvas,
     return true;
 }
 
-bool renderMapPlayer(Canvas& canvas, Player& player){
+bool Render::renderMapPlayer(Canvas& canvas, Player& player){
     // Draw player on the top-down map
     canvas.drawRectangle(HUD_SHIFT_X + player.x * MAP_RECT_WIDTH,
                          HUD_SHIFT_Y + player.y * MAP_RECT_HEIGHT,5, 5, packColor(0, 255, 0));
     return true;
 }
 
-bool renderMapSprites(Canvas& canvas, std::vector<Sprite>& sprites){
+bool Render::renderMapSprites(Canvas& canvas, std::vector<Sprite>& sprites){
     for (size_t i = 0; i < sprites.size(); i++){
         canvas.drawRectangle(HUD_SHIFT_X + sprites[i].x * MAP_RECT_WIDTH,
                              HUD_SHIFT_Y + sprites[i].y * MAP_RECT_HEIGHT, 5, 5, packColor(255, 0, 0));
@@ -134,7 +134,7 @@ bool renderMapSprites(Canvas& canvas, std::vector<Sprite>& sprites){
     return true;
 }
 
-bool renderMap(Canvas& canvas, Map& map, Texture& textures){
+bool Render::renderMap(Canvas& canvas, Map& map, Texture& textures){
     // Scale the top-down map to window size and display it
     const size_t textureCount = textures.getCount();
 
@@ -157,17 +157,17 @@ bool renderMap(Canvas& canvas, Map& map, Texture& textures){
     return true;
 }
 
-bool renderHUDPlaceholder(Canvas& canvas){
+bool Render::renderHUDPlaceholder(Canvas& canvas){
     canvas.drawRectangle(HUD_SHIFT_X, HUD_SHIFT_Y, HUD_WIDTH, HUD_HEIGHT, packColor(50, 50, 50));
     return true;
 }
 
-void render(Canvas& canvas,
-            Map& map, 
-            Texture& textures, 
-            Texture& spriteTextures, 
-            Player& player, 
-            std::vector<Sprite>& sprites){
+void Render::render(Canvas& canvas,
+                    Map& map, 
+                    Texture& textures, 
+                    Texture& spriteTextures, 
+                    Player& player, 
+                    std::vector<Sprite>& sprites){
     canvas.clearCanvas(packColor(255, 255, 255));
 
     assert(renderWorld(canvas, map, textures, spriteTextures, player, sprites));
