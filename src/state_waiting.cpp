@@ -1,5 +1,6 @@
 #include <iostream>
 #include "SDL.h"
+#include "render.h"
 #include "game.h"
 #include "state_waiting.h"
 #include "state_running.h"
@@ -30,6 +31,8 @@ void StateWaiting::handleEvents(Game* game){
 
 void StateWaiting::update(Game* game){}
 
-void StateWaiting::render(Game* game){}
+void StateWaiting::render(Game* game){
+    Render::render(game->canvas, game->map, game->wallTextures, game->monsterTextures, game->player, game->monsters);
+}
 
 StateWaiting* StateWaiting::getInstance(){ return &i_StateWaiting; }

@@ -1,6 +1,5 @@
 #include <iostream>
 #include <memory>
-#include "render.h"
 #include "game.h"
 #include "state_waiting.h"
 
@@ -48,7 +47,6 @@ void Game::gameUpdate(){
     state->handleEvents(this);
     state->update(this);
     state->render(this);
-    render(canvas, map, wallTextures, monsterTextures, player, monsters);
 }
 
 void Game::sdlInit(){

@@ -1,4 +1,5 @@
 #include <iostream>
+#include "render.h"
 #include "state_running.h"
 #include "state_terminate.h"
 
@@ -63,6 +64,8 @@ void StateRunning::update(Game* game){
     }
 }
 
-void StateRunning::render(Game* game){}
+void StateRunning::render(Game* game){
+    Render::render(game->canvas, game->map, game->wallTextures, game->monsterTextures, game->player, game->monsters);
+}
 
 StateRunning* StateRunning::getInstance(){ return &i_StateRunning; }
