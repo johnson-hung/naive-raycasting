@@ -1,3 +1,4 @@
+#include <iostream>
 #include "SDL.h"
 #include "game.h"
 #include "state_waiting.h"
@@ -6,20 +7,22 @@
 
 StateWaiting StateWaiting::i_StateWaiting;
 
+void StateWaiting::init(Game* game){
+    std::cout<<"[Game] State: Waiting"<<std::endl;
+    game->textRect.w = 205;
+    game->curText = "Press 'E' to start...";
+}
+
 void StateWaiting::handleEvents(Game* game){
     SDL_Event event;
     if (SDL_PollEvent(&event)){
         if (event.type == SDL_QUIT){
+            std::cout<<"[Game] Change state: Waiting -> Terminate"<<std::endl;
             changeState(game, StateTerminate::getInstance());
             return;
         }
         if (event.type == SDL_KEYDOWN && event.key.keysym.sym == 'e'){
             std::cout<<"[Game] Change state: Waiting -> Running"<<std::endl;
-            game->curText =  "W - Go Forward     ";
-            game->curText += "S - Go Backward    ";
-            game->curText += "A - Turn Left      ";
-            game->curText += "D - Turn Right     ";
-            game->curText += "Esc - Exit Game    ";
             changeState(game, StateRunning::getInstance());
         }
     }

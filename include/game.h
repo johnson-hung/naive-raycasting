@@ -1,9 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include <memory>
 #include <vector>
-#include <iostream>
 #include "canvas.h"
 #include "map.h"
 #include "player.h"
@@ -57,7 +55,7 @@ class Game{
         void sdlCleanup();
         void sdlRender();
 
-        void ttfInit(std::string _text);
+        void ttfInit();
         void ttfUpdate();
         void ttfCleanup();
 

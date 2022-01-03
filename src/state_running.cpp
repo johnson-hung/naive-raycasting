@@ -1,7 +1,18 @@
+#include <iostream>
 #include "state_running.h"
 #include "state_terminate.h"
 
 StateRunning StateRunning::i_StateRunning;
+
+void StateRunning::init(Game* game){
+    std::cout<<"[Game] State: Running"<<std::endl;
+    game->textRect.w = 205;
+    game->curText =  "W - Go Forward     ";
+    game->curText += "S - Go Backward    ";
+    game->curText += "A - Turn Left      ";
+    game->curText += "D - Turn Right     ";
+    game->curText += "Esc - Exit Game    ";
+}
 
 void StateRunning::handleEvents(Game* game){
     SDL_Event event;

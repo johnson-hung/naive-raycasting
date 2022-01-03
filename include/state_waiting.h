@@ -11,6 +11,7 @@ class StateWaiting: public GameState{
         StateWaiting(){}
     
     public:
+        void init(Game* game);
         void handleEvents(Game* game);
         void update(Game* game);
         void render(Game* game);

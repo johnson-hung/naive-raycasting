@@ -22,7 +22,7 @@ int main() {
     // Initialize the game
     Game game;
     game.sdlInit();
-    game.ttfInit("Press 'E' to start...");
+    game.ttfInit();
     game.gameInit(
         Canvas(CANVAS_WIDTH, CANVAS_HEIGHT, 0),                             // Window (canvas) properties
         Map(),                                                              // Top-down map
@@ -39,9 +39,8 @@ int main() {
     );
     game.changeState(StateWaiting::getInstance());
 
-    // State handling (temp)
+    // Game update
     auto startTime = std::chrono::high_resolution_clock::now();
-    std::cout<<"[Game] State: Waiting"<<std::endl;
     while (game.running()){
         if (isCurrentWorld(startTime)) continue;
         // Update current world and objects data

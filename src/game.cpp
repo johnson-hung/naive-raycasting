@@ -1,3 +1,5 @@
+#include <iostream>
+#include <memory>
 #include "render.h"
 #include "game.h"
 #include "state_waiting.h"
@@ -81,8 +83,8 @@ void Game::sdlCleanup(){
 }
 
 
-void Game::ttfInit(std::string _text){
-    curText = _text;
+void Game::ttfInit(){
+    curText = "Initializing...";
     preText = curText;
     if (TTF_Init() != 0){
         std::cerr<<"Failed to create initialize SDL_ttf: "<<TTF_GetError()<<std::endl;
@@ -100,7 +102,6 @@ void Game::ttfInit(std::string _text){
     textRect.y = TEXTFIELD_Y;
     textRect.w = textSurface->w;
     textRect.h = textSurface->h;
-
     std::cout<<"SDL_TTF initialized"<<std::endl;
 }
 
@@ -127,6 +128,7 @@ void Game::sdlRender(){ SDL_RenderPresent(renderer); }
 void Game::changeState(GameState* newState){
     std::cout<<"Game state changed"<<std::endl;
     state = newState;
+    state->init(this);
 }
 
 bool Game::running(){ return isRunning; }
