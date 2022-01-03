@@ -32,7 +32,9 @@ void StateWaiting::handleEvents(Game* game){
 void StateWaiting::update(Game* game){}
 
 void StateWaiting::render(Game* game){
-    Render::render(game->canvas, game->map, game->wallTextures, game->monsterTextures, game->player, game->monsters);
+    Render::renderWorldEnvironment(game->canvas, game->map, game->wallTextures, game->player);
+    Render::renderHUDPlaceholder(game->canvas);
+    Render::renderMapEnvironment(game->canvas, game->map, game->wallTextures);
 }
 
 StateWaiting* StateWaiting::getInstance(){ return &i_StateWaiting; }
