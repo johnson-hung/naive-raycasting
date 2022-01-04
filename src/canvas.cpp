@@ -25,13 +25,14 @@ void Canvas::drawPixel(const size_t x, const size_t y, const uint32_t color){
 
 // Draw a rectangle starting from (x, y) and fill it with given color
 void Canvas::drawRectangle(
-                   const size_t x, // Start from this x
-                   const size_t y, // Start from this y
-                   const size_t rectW,
-                   const size_t rectH,
+                   const size_t x,          // Start from this x
+                   const size_t y,          // Start from this y
+                   const size_t rectW,      // Width of the rectangle
+                   const size_t rectH,      // Height of the rectangle
                    const uint32_t color){
     assert(img.size() == w*h);
 
+    // Set color for each cell in the rectangle
     for (size_t offsetX = 0; offsetX < rectW; offsetX++){
         for (size_t offsetY = 0; offsetY < rectH; offsetY++){
             size_t curX = x + offsetX;
@@ -44,3 +45,7 @@ void Canvas::drawRectangle(
     }   
 }
 
+// Getters
+std::vector<uint32_t> Canvas::getImage(){ return img; }
+size_t Canvas::getWidth(){ return w; }
+size_t Canvas::getHeight(){ return h; }

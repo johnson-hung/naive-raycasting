@@ -6,9 +6,9 @@
 
 class Canvas{
     private:
-        size_t w;
-        size_t h;
-        std::vector<uint32_t> img; // Current image
+        size_t w;                   // Width of current image
+        size_t h;                   // Height of current image
+        std::vector<uint32_t> img;  // Current image
 
     public:
         Canvas(){};
@@ -23,11 +23,10 @@ class Canvas{
         // Draw a rectangle starting from (x, y) and fill it with given color
         void drawRectangle(const size_t x, const size_t y, const size_t rectW, const size_t rectH, const uint32_t color);
 
-        // Return current image
-        std::vector<uint32_t> getImage(){ return img; }
-
-        size_t getWidth(){ return w; }
-        size_t getHeight(){ return h; }
+        // Getters
+        std::vector<uint32_t> getImage();
+        size_t getWidth();
+        size_t getHeight();
 };
 
 #endif
