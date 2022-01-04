@@ -3,6 +3,7 @@
 #include <cmath>
 #include <thread>
 #include <string>
+#include "settings.h"
 #include "game.h"
 #include "state_waiting.h"
 

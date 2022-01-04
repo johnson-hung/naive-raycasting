@@ -1,9 +1,9 @@
 #include <iostream>
 #include <memory>
+#include "settings.h"
 #include "game.h"
 #include "state_waiting.h"
 
-static StateWaiting* i_StateWaiting =  StateWaiting::getInstance();
 
 Game::Game(){
     state = nullptr;

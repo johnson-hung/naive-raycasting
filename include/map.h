@@ -3,7 +3,6 @@
 
 #include <cstdlib>
 #include <vector>
-#include "settings.h"
 
 class Map{
     private:

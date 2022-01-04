@@ -1,4 +1,5 @@
 #include <iostream>
+#include "settings.h"
 #include "render.h"
 #include "state_running.h"
 #include "state_terminate.h"
