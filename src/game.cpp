@@ -2,8 +2,7 @@
 #include <memory>
 #include "settings.h"
 #include "game.h"
-#include "state_waiting.h"
-
+#include "game_state.h"
 
 Game::Game(){
     state = nullptr;
