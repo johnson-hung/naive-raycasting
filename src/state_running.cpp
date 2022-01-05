@@ -6,6 +6,7 @@
 
 StateRunning StateRunning::i_StateRunning;
 
+// Set up the world or canvas display for the current game state
 void StateRunning::init(Game* game){
     std::cout<<"[Game] State: Running"<<std::endl;
     game->textRect.w = 205;
@@ -16,6 +17,7 @@ void StateRunning::init(Game* game){
     game->curText += "Esc - Exit Game    ";
 }
 
+// Handle events (e.g. user inputs)
 void StateRunning::handleEvents(Game* game){
     SDL_Event event;
     if (SDL_PollEvent(&event)){
@@ -38,6 +40,7 @@ void StateRunning::handleEvents(Game* game){
     }
 }
 
+// Method to update the world under the current game state
 void StateRunning::update(Game* game){
     // Update player position and rotation
     float factor = 0.05;
@@ -65,8 +68,10 @@ void StateRunning::update(Game* game){
     }
 }
 
+// Method to render the world under the current game state
 void StateRunning::render(Game* game){
     Render::render(game->canvas, game->map, game->wallTextures, game->monsterTextures, game->player, game->monsters);
 }
 
+// Return pointer to the singleton of running state
 StateRunning* StateRunning::getInstance(){ return &i_StateRunning; }
