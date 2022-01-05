@@ -9,7 +9,7 @@
 #include "utils.h"
 #include "render.h"
 
-
+// Sort sprites by distance in descending order so that far sprites would get rendered first
 bool Render::sortSpritesByDistance(std::vector<Sprite>& sprites, Player& player){
     for (size_t i = 0; i < sprites.size(); i++){
         updateSpriteDistanceToPlayer(sprites[i], player);
@@ -18,8 +18,9 @@ bool Render::sortSpritesByDistance(std::vector<Sprite>& sprites, Player& player)
     return true;
 }
 
+// Render world environment (ceiling, floor, and blocks) and return buffer of hitpoint distances to player
 std::vector<float> Render::renderWorldEnvironment(Canvas& canvas, Map& map, Texture& textures, Player& player){
-    canvas.drawRectangle(0, 0, MAIN_WIDTH, MAIN_HEIGHT/2, packColor(40, 40, 40)); // Ceiling
+    canvas.drawRectangle(0, 0, MAIN_WIDTH, MAIN_HEIGHT/2, packColor(40, 40, 40));             // Ceiling
     canvas.drawRectangle(0, MAIN_HEIGHT/2, MAIN_WIDTH, MAIN_HEIGHT/2, packColor(20, 20, 20)); // Floor
     
     const size_t textureCount = textures.getCount();
@@ -41,9 +42,9 @@ std::vector<float> Render::renderWorldEnvironment(Canvas& canvas, Map& map, Text
                 size_t textureIdx = map.getValueAt((int) targetX, (int) targetY);
                 assert(textureIdx < textureCount);
                 
-                float distFixed = dist * cos(rotation - player.rot);
+                float distFixed = dist * cos(rotation - player.rot); // Fix fisheye distortion
                 distBuffer[i] = distFixed;
-                size_t h = MAIN_HEIGHT / distFixed; // Fix fisheye distortion
+                size_t h = MAIN_HEIGHT / distFixed; // Height of the block
 
                 // Get fractional part of targetX and targetY to determine the 
                 // position of the hitpoint (top/bottom or left/right side of block)
@@ -69,6 +70,7 @@ std::vector<float> Render::renderWorldEnvironment(Canvas& canvas, Map& map, Text
     return distBuffer;
 }
 
+// Render a world sprite. Sprite pixel is visible if it's in the range of main screen and not blocked
 bool Render::renderWorldSprite(Canvas& canvas, 
                                Sprite& sprite, 
                                Texture& texture, 
@@ -107,20 +109,21 @@ bool Render::renderWorldSprite(Canvas& canvas,
     return true;
 }
 
+// Render sorted world sprites (sprites would be sorted by distance in descending order)
 bool Render::renderWorldSprites(Canvas& canvas,
                                 Player& player,
                                 std::vector<Sprite>& sprites,
                                 Texture& spriteTextures,
                                 std::vector<float> distBuffer){
-    // Sort sprites by distance first and then render them
     assert(sortSpritesByDistance(sprites, player));
+
     for (size_t i = 0; i < sprites.size(); i++){
         assert(renderWorldSprite(canvas, sprites[i], spriteTextures, player, distBuffer));
     } 
     return true;
 }
 
-// Cast field of view on the top-down map and 3D view
+// Render 3D view of the current world with environment and sprites included
 bool Render::renderWorld(Canvas& canvas,
                          Map& map,
                          Texture& textures,
@@ -132,6 +135,7 @@ bool Render::renderWorld(Canvas& canvas,
     return true;
 }
 
+// Draw a green dot on the map to show current player position in the world
 bool Render::renderMapPlayer(Canvas& canvas, Player& player){
     if (!MAP_DISPLAY) return true;
 
@@ -141,6 +145,7 @@ bool Render::renderMapPlayer(Canvas& canvas, Player& player){
     return true;
 }
 
+// Draw red dots on the map to show current sprite positions in the world
 bool Render::renderMapSprites(Canvas& canvas, std::vector<Sprite>& sprites){
     if (!MAP_DISPLAY) return true;
 
@@ -151,13 +156,11 @@ bool Render::renderMapSprites(Canvas& canvas, std::vector<Sprite>& sprites){
     return true;
 }
 
+// Draw predefined blocks in the world on the map
 bool Render::renderMapEnvironment(Canvas& canvas, Map& map, Texture& textures){
     if (!MAP_DISPLAY) return true;
 
-    // Scale the top-down map to window size and display it
     const size_t textureCount = textures.getCount();
-
-    // Draw the top-down map
     for (size_t x = 0; x < MAP_WIDTH; x++){
         for (size_t y = 0; y < MAP_HEIGHT; y++){
             size_t imgX = HUD_SHIFT_X + x * MAP_RECT_WIDTH;
@@ -167,8 +170,10 @@ bool Render::renderMapEnvironment(Canvas& canvas, Map& map, Texture& textures){
                 continue;
             }
 
+            // Make sure we can find the corresponding texture with given index
             size_t textureIdx = map.getValueAt(x, y);
             assert(textureIdx < textureCount);
+
             // Pick a pixel to represent the block
             canvas.drawRectangle(imgX, imgY, MAP_RECT_WIDTH, MAP_RECT_HEIGHT, textures.getValueAt(textureIdx, 0, 0));
         }
@@ -176,6 +181,7 @@ bool Render::renderMapEnvironment(Canvas& canvas, Map& map, Texture& textures){
     return true;
 }
 
+// Draw a map with environment, player, and sprites included
 bool Render::renderMap(Canvas& canvas, Map& map, Texture& textures, Player& player, std::vector<Sprite>& sprites){
     if (!MAP_DISPLAY) return true;
 
@@ -185,6 +191,7 @@ bool Render::renderMap(Canvas& canvas, Map& map, Texture& textures, Player& play
     return true;
 }
 
+// Draw a field as background to hold a map and text display
 bool Render::renderHUDPlaceholder(Canvas& canvas){
     if (!HUD_DISPLAY) return true;
 
@@ -192,6 +199,7 @@ bool Render::renderHUDPlaceholder(Canvas& canvas){
     return true;
 }
 
+// Render the current world, HUD placeholder and a map
 void Render::render(Canvas& canvas,
                     Map& map, 
                     Texture& textures, 
