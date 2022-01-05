@@ -1,5 +1,8 @@
+#include <cmath>
+#include "player.h"
 #include "sprite.h"
 
+// Compare two sprites, sprite with shorter distance to player should be in the front
 bool compareSpriteDistance(Sprite& a, Sprite& b){
     return a.distToPlayer > b.distToPlayer;
 }
