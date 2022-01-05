@@ -8,12 +8,14 @@
 
 StateWaiting StateWaiting::i_StateWaiting;
 
+// Set up the world or canvas display for the current game state
 void StateWaiting::init(Game* game){
     std::cout<<"[Game] State: Waiting"<<std::endl;
     game->textRect.w = 205;
     game->curText = "Press 'E' to start...";
 }
 
+// Handle events (e.g. user inputs)
 void StateWaiting::handleEvents(Game* game){
     SDL_Event event;
     if (SDL_PollEvent(&event)){
@@ -29,12 +31,19 @@ void StateWaiting::handleEvents(Game* game){
     }
 }
 
-void StateWaiting::update(Game* game){}
+// Method to update the world under the current game state
+void StateWaiting::update(Game* game){
+    // Do something here...
+}
 
+// Method to render the world under the current game state
 void StateWaiting::render(Game* game){
     Render::renderWorldEnvironment(game->canvas, game->map, game->wallTextures, game->player);
     Render::renderHUDPlaceholder(game->canvas);
     Render::renderMapEnvironment(game->canvas, game->map, game->wallTextures);
 }
 
-StateWaiting* StateWaiting::getInstance(){ return &i_StateWaiting; }
+// Return pointer to the singleton of waiting state
+StateWaiting* StateWaiting::getInstance(){
+    return &i_StateWaiting;
+}
