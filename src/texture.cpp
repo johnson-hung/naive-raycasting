@@ -7,6 +7,7 @@
 #include "utils.h"
 #include "texture.h"
 
+// Load image file into SDL_Surface and store color data with `img`
 Texture::Texture(const std::string filename, const uint32_t format){
     SDL_Surface* load = SDL_LoadBMP(filename.c_str());
     if (!load){
@@ -69,3 +70,10 @@ std::vector<uint32_t> Texture::getTextureColumn(const size_t textureIdx, const s
     }
     return col;
 }
+
+// Getters
+size_t Texture::getSize(){ return size; }
+size_t Texture::getCount(){ return count; }
+
+// Check if we can find textures in the given image
+bool Texture::isEmpty(){ return count == 0; }
