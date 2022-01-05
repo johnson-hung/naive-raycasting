@@ -1,8 +1,9 @@
 #include <iostream>
-#include <memory>
 #include "settings.h"
 #include "game.h"
 #include "game_state.h"
+#include "SDL.h"
+#include "SDL_ttf.h"
 
 Game::Game(){
     state = nullptr;
@@ -21,6 +22,7 @@ Game::Game(){
     std::cout<<"Game instance created"<<std::endl;
 }
 
+// Initialize the game world
 void Game::gameInit(const Canvas& _canvas,
                 const Map& _map,
                 const Player& _player,
@@ -42,12 +44,14 @@ void Game::gameInit(const Canvas& _canvas,
     std::cout<<"World initialized"<<std::endl;
 }
 
+// Update the current world and refresh content display
 void Game::gameUpdate(){
     state->handleEvents(this);
     state->update(this);
     state->render(this);
 }
 
+// Initialize SDL window, renderer and texture with predefined CANVAS_WIDTH and CANVAS_HEIGHT
 void Game::sdlInit(){
     if (SDL_Init(SDL_INIT_VIDEO) != 0){
         std::cerr<<"Failed to initialize SDL: "<<SDL_GetError()<<std::endl;
@@ -65,13 +69,14 @@ void Game::sdlInit(){
     std::cout<<"SDL initialized"<<std::endl;
 }
 
+// Copy canvas data to the SDL renderer
 void Game::sdlUpdate(){
-    // Copy canvas and text data to the screen
     SDL_UpdateTexture(canvasTexture, NULL, reinterpret_cast<void*>(canvas.getImage().data()), CANVAS_WIDTH*4);
     SDL_RenderClear(renderer);
     SDL_RenderCopy(renderer, canvasTexture, NULL, NULL);
 }
 
+// Destroy SDL texture, renderer, and window
 void Game::sdlCleanup(){
     SDL_DestroyTexture(canvasTexture);
     SDL_DestroyRenderer(renderer);
@@ -79,7 +84,12 @@ void Game::sdlCleanup(){
     std::cout<<"SDL cleaned"<<std::endl;
 }
 
+// Render data maintained in the SDL renderer
+void Game::sdlRender(){
+    SDL_RenderPresent(renderer);
+}
 
+// Initialize SDL_ttf (True Type Font) text display
 void Game::ttfInit(){
     curText = "Initializing...";
     preText = curText;
@@ -99,11 +109,11 @@ void Game::ttfInit(){
     textRect.y = TEXTFIELD_Y;
     textRect.w = textSurface->w;
     textRect.h = textSurface->h;
-    std::cout<<"SDL_TTF initialized"<<std::endl;
+    std::cout<<"SDL_ttf initialized"<<std::endl;
 }
 
+// Copy new text data to the SDL renderer
 void Game::ttfUpdate(){
-    // Update text surface before rendering
     if (curText != preText){
         textSurface = TTF_RenderText_Blended_Wrapped(font, curText.c_str(), textColor, textRect.w);
         textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
@@ -114,19 +124,27 @@ void Game::ttfUpdate(){
     SDL_RenderCopy(renderer, textTexture, NULL, &textRect);
 }
 
+// Destroy SDL_ttf text textures
 void Game::ttfCleanup(){
     SDL_FreeSurface(textSurface);
     SDL_DestroyTexture(textTexture);
-    std::cout<<"SDL_TTF cleaned"<<std::endl;
+    std::cout<<"SDL_ttf cleaned"<<std::endl;
 }
 
-void Game::sdlRender(){ SDL_RenderPresent(renderer); }
 
+// Change game state to the given new state
 void Game::changeState(GameState* newState){
     std::cout<<"Game state changed"<<std::endl;
     state = newState;
     state->init(this);
 }
 
-bool Game::running(){ return isRunning; }
-void Game::terminate(){ isRunning = false; }
+// Check if the game is running
+bool Game::running(){
+    return isRunning;
+}
+
+// Terminate the current game
+void Game::terminate(){
+    isRunning = false;
+}
