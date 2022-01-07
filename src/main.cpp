@@ -7,9 +7,9 @@
 #include "game.h"
 #include "state_waiting.h"
 
-bool isCurrentWorld(std::chrono::steady_clock::time_point& startTime){
+bool isCurrentWorld(std::chrono::system_clock::time_point& startTime){
     // Sleep if the current duration is less than WORLD_UPDATE_TIME [ms] since last rendering
-    auto currentTime = std::chrono::high_resolution_clock::now();
+    auto currentTime = std::chrono::system_clock::now();
     std::chrono::duration<double, std::milli> duration = currentTime - startTime; // [ms]
     if (duration.count() < WORLD_UPDATE_PERIOD){
         std::this_thread::sleep_for(std::chrono::milliseconds(3));
@@ -41,7 +41,7 @@ int main() {
     game.changeState(StateWaiting::getInstance());
 
     // Game update
-    auto startTime = std::chrono::high_resolution_clock::now();
+    auto startTime = std::chrono::system_clock::now();
     while (game.running()){
         if (isCurrentWorld(startTime)) continue;
         // Update current world and objects data
