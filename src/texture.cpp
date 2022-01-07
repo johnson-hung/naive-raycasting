@@ -42,8 +42,8 @@ Texture::Texture(const std::string filename, const uint32_t format){
 
     uint8_t* buf = reinterpret_cast<uint8_t*>(sdlImg->pixels);
     img = std::vector<uint32_t>(imgW * imgH);
-    for (int x = 0; x < imgW; x++){
-        for (int y = 0; y < imgH; y++){
+    for (size_t x = 0; x < imgW; x++){
+        for (size_t y = 0; y < imgH; y++){
             uint8_t r = buf[(y*imgW + x)*4];
             uint8_t g = buf[(y*imgW + x)*4 + 1];
             uint8_t b = buf[(y*imgW + x)*4 + 2];
