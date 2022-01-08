@@ -2,7 +2,7 @@
 -[demo](https://youtu.be/Z8ZcTcYVCt0)
 <br />
 
-This is a game prototype that showcases the concept of raycasting, integration of the SDL2 library, and ways of managing game states.
+This is a game prototype that showcases the concept of 3D raycasting, integration of the [SDL2](https://github.com/libsdl-org/SDL) library, and ways to manage game states.
 
 ## Features
 - Showcased the concept of 3D raycasting with an extensible game architecture
