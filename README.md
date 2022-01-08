@@ -1,8 +1,8 @@
 # Naive Raycasting
--[demo](https://youtu.be/ISGBiUehNXw)
+-[demo](https://youtu.be/Z8ZcTcYVCt0)
 <br />
 
-This is a game prototype that showcases concept of raycasting,  integration of SDL2 library, and ways of managing game states.
+This is a game prototype that showcases the concept of raycasting, integration of the SDL2 library, and ways of managing game states.
 
 ## Features
 - Showcased the concept of 3D raycasting with an extensible game architecture
@@ -59,4 +59,4 @@ Now, you can run the program by executing:<br />
 
 ## Resources
 - The raycasting functionality was developed on the basis of [this tutorial](https://github.com/ssloy/tinyraycaster) with extra features and refined software design combined
-- For game state management, [this](http://lazyfoo.net/articles/article06/index.php) and [this](http://gamedevgeek.com/tutorials/managing-game-states-in-c/) have provided non-trivial examples that could be put to good use.
+- For game state management, [this](http://lazyfoo.net/articles/article06/index.php) and [this](http://gamedevgeek.com/tutorials/managing-game-states-in-c/) had provided non-trivial examples that could be put to good use.
