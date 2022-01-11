@@ -4,6 +4,12 @@
 
 This is a game prototype that showcases the concept of 3D raycasting, integration of the [SDL2](https://github.com/libsdl-org/SDL) library, and ways to manage game states.
 
+### Content
+- [Features](#features)
+- [Directory Structure](#directory-structure)
+- [Compile and Run](#compile-and-run)
+- [Resources](#resources)
+
 ## Features
 - Showcased the concept of 3D raycasting with an extensible game architecture
 - Supported low-level access to keyboard and graphics hardware via SDL2 Library
@@ -14,11 +20,11 @@ This is a game prototype that showcases the concept of 3D raycasting, integratio
 $ tree -d naive-raycasting
 
 naive-raycasting
-├── fonts		<- Font files 	  (.ttf)
-├── include		<- Header files	  (.h)
-├── obj			<- Object files   (.o)
-├── src			<- Source files   (.cpp)
-└── textures		<- Texture images (.bmp)
+├── fonts       <- Font files     (.ttf)
+├── include     <- Header files   (.h)
+├── obj         <- Object files   (.o)
+├── src         <- Source files   (.cpp)
+└── textures    <- Texture images (.bmp)
 ```
 
 ## Compile and Run
