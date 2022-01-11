@@ -14,15 +14,15 @@ This is a game prototype that showcases the concept of 3D raycasting, integratio
 $ tree -d naive-raycasting
 
 naive-raycasting
-├── fonts				<- Font files 	  (.ttf)
-├── include				<- Header files	  (.h)
-├── obj					<- Object files   (.o)
-├── src					<- Source files   (.cpp)
-└── textures				<- Texture images (.bmp)
+├── fonts		<- Font files 	  (.ttf)
+├── include		<- Header files	  (.h)
+├── obj			<- Object files   (.o)
+├── src			<- Source files   (.cpp)
+└── textures		<- Texture images (.bmp)
 ```
 
-## Build and Run
-To build the program, you may first clone this repo to your local workspace by executing the following command in the terminal:
+## Compile and Run
+To compile the program, you may first clone this repo to your local workspace by executing the following command in the terminal:
 <br />
 
 ```
@@ -43,7 +43,7 @@ After cloning the repo, make sure that you have [SDL2](https://libsdl.org/) and 
 	brew install sdl2_ttf
 	```
 
-Then, you may build the program by executing the following commands under the project root directory:
+Then, you may compile the program by executing the following commands under the project root directory:
  ```
  make
  ``` 
