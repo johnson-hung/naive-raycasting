@@ -1,8 +1,9 @@
 # Naive Raycasting
 -[demo](https://youtu.be/Z8ZcTcYVCt0)
 <br />
-
-This is a game prototype that showcases the concept of 3D raycasting, integration of the [SDL2](https://github.com/libsdl-org/SDL) library, and ways to manage game states.
+| | |
+|-|-|
+|<img width="381" alt="Screen Shot 2022-01-11 at 2 44 25 PM" src="https://user-images.githubusercontent.com/54716073/149019029-f07d98dd-8704-4c54-9c86-79bcdb105564.png"> | This is a game prototype that showcases the concept of 3D raycasting, integration of the [SDL2](https://github.com/libsdl-org/SDL) library, and ways to manage game states.
 
 ### Content
 - [Features](#features)
